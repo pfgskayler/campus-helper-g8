@@ -221,6 +221,124 @@ function SearchView({ events, navigate, onLike }) {
   );
 }
 
+// ── REVIEW SECTION ─────────────────────────────────────────
+function ReviewSection({ eventId }) {
+  const storageKey = "sv_reviews";
+  const load = () => { try { return JSON.parse(localStorage.getItem(storageKey)) || {}; } catch(e) { return {}; } };
+
+  const [allReviews, setAllReviews] = React.useState(load);
+  const reviews = allReviews[eventId] || [];
+  const myReview = reviews.find(r => r.me);
+
+  const [stars, setStars] = React.useState(0);
+  const [hover, setHover] = React.useState(0);
+  const [text, setText] = React.useState("");
+  const [submitted, setSubmitted] = React.useState(!!myReview);
+
+  const submit = () => {
+    if (!stars) return;
+    const review = { me:true, author:"Marie", stars, text:text.trim(), date:"Aujourd'hui" };
+    const next = { ...allReviews, [eventId]: [...reviews.filter(r => !r.me), review] };
+    localStorage.setItem(storageKey, JSON.stringify(next));
+    setAllReviews(next);
+    setSubmitted(true);
+  };
+
+  const avgStars = reviews.length ? (reviews.reduce((s,r) => s+r.stars, 0) / reviews.length).toFixed(1) : null;
+
+  return (
+    <div style={{ marginTop:32 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+        <h3 style={{ fontSize:18, fontFamily:F.title, fontWeight:400, color:T.text, margin:0 }}>Avis & notes</h3>
+        {avgStars && (
+          <div style={{ display:"flex", alignItems:"center", gap:6,
+            background:T.muted, borderRadius:20, padding:"4px 12px", border:`1px solid ${T.border}` }}>
+            <span style={{ fontSize:14 }}>⭐</span>
+            <span style={{ fontWeight:700, fontSize:14, color:T.text, fontFamily:F.body }}>{avgStars}</span>
+            <span style={{ fontSize:12, color:T.sec, fontFamily:F.body }}>({reviews.length})</span>
+          </div>
+        )}
+      </div>
+
+      {/* Existing reviews */}
+      {reviews.length > 0 && (
+        <div style={{ display:"flex", flexDirection:"column", gap:12, marginBottom:24 }}>
+          {reviews.map((r,i) => (
+            <div key={i} style={{ background:T.card, borderRadius:14, padding:"16px 20px",
+              border:`1px solid ${T.border}` }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ fontWeight:700, fontSize:14, color:T.text, fontFamily:F.body }}>{r.author}</span>
+                  {r.me && <span style={{ fontSize:11, background:T.lilac, color:T.coral,
+                    borderRadius:20, padding:"2px 8px", fontWeight:600, fontFamily:F.body }}>Toi</span>}
+                </div>
+                <div style={{ display:"flex", gap:2 }}>
+                  {[1,2,3,4,5].map(s => (
+                    <span key={s} style={{ fontSize:14, color: s<=r.stars ? "#F59E0B" : T.border }}>★</span>
+                  ))}
+                </div>
+              </div>
+              {r.text && <p style={{ fontSize:14, color:T.text, margin:0, fontFamily:F.body, lineHeight:1.6 }}>{r.text}</p>}
+              <p style={{ fontSize:11, color:T.sec, margin:"6px 0 0", fontFamily:F.body }}>{r.date}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Form */}
+      {submitted ? (
+        <div style={{ background:"#F0FDF4", borderRadius:14, padding:"16px 20px",
+          border:"1px solid #BBF7D0", display:"flex", alignItems:"center", gap:10 }}>
+          <span style={{ fontSize:20 }}>✅</span>
+          <p style={{ margin:0, fontWeight:600, fontSize:14, color:"#059669", fontFamily:F.body }}>
+            Merci pour ton avis !
+          </p>
+        </div>
+      ) : (
+        <div style={{ background:T.card, borderRadius:16, padding:"20px 24px", border:`1px solid ${T.border}` }}>
+          <p style={{ fontSize:14, fontWeight:600, color:T.text, fontFamily:F.body, marginBottom:12 }}>
+            Donne ton avis sur cet événement
+          </p>
+          <div style={{ display:"flex", gap:6, marginBottom:16 }}>
+            {[1,2,3,4,5].map(s => (
+              <button key={s}
+                onClick={() => setStars(s)}
+                onMouseEnter={() => setHover(s)}
+                onMouseLeave={() => setHover(0)}
+                style={{ background:"none", border:"none", cursor:"pointer", fontSize:28, padding:0,
+                  color: s <= (hover || stars) ? "#F59E0B" : T.border,
+                  transition:"color 0.12s, transform 0.12s",
+                  transform: s <= (hover || stars) ? "scale(1.2)" : "scale(1)" }}>★</button>
+            ))}
+          </div>
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            placeholder="Décris ton expérience (optionnel)…"
+            rows={3}
+            style={{ width:"100%", background:T.muted, border:`1.5px solid ${T.border}`,
+              borderRadius:12, padding:"12px 16px", fontSize:14, fontFamily:F.body,
+              color:T.text, resize:"none", outline:"none", boxSizing:"border-box",
+              marginBottom:12 }}
+          />
+          <button
+            onClick={submit}
+            disabled={!stars}
+            className="sv-btn-primary"
+            style={{ padding:"11px 28px", borderRadius:12, fontWeight:700, fontSize:14,
+              cursor: stars ? "pointer" : "not-allowed",
+              background: stars ? T.coral : T.border, color:"#fff", border:"none",
+              fontFamily:F.body, opacity: stars ? 1 : 0.5,
+              boxShadow: stars ? "0 4px 14px rgba(251,99,118,0.35)" : "none",
+              transition:"all 0.18s" }}>
+            Envoyer mon avis
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── EVENT DETAIL ───────────────────────────────────────────
 function EventDetailView({ ev, navigate, onJoin, onLike }) {
   const idx = EVENTS_DATA.findIndex(e => e.id === ev.id);
@@ -281,6 +399,8 @@ function EventDetailView({ ev, navigate, onJoin, onLike }) {
             </h3>
             <ParticipantDots count={parts} />
           </div>
+
+          {ev.past && <ReviewSection eventId={ev.id} />}
         </div>
 
         {/* Right sticky card */}
