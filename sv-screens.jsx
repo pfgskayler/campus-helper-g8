@@ -5,6 +5,8 @@ function HomeView({ events, navigate, onLike }) {
   const [activeCat, setActiveCat] = React.useState("Tous");
   const [query, setQuery] = React.useState("");
   const [focused, setFocused] = React.useState(false);
+  const [showAllActu, setShowAllActu] = React.useState(false);
+  const [showAllSugg, setShowAllSugg] = React.useState(false);
 
   // Combined filter: query + category
   const filtered = events.filter(e => {
@@ -137,16 +139,16 @@ function HomeView({ events, navigate, onLike }) {
       ) : (
         // Default home layout
         <>
-          <SectionTitle action="Voir tout">Actualité</SectionTitle>
+          <SectionTitle action={showAllActu ? "Réduire" : "Voir tout"} onAction={() => setShowAllActu(v => !v)}>Actualité</SectionTitle>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20, marginBottom:48 }}>
-            {events.slice(0,3).map((ev,i) => (
+            {(showAllActu ? events : events.slice(0,3)).map((ev,i) => (
               <EventCard key={ev.id} ev={ev} idx={i} onClick={ev => navigate("detail", ev)} onLike={onLike} />
             ))}
           </div>
 
-          <SectionTitle action="Voir tout">Suggestions pour toi</SectionTitle>
+          <SectionTitle action={showAllSugg ? "Réduire" : "Voir tout"} onAction={() => setShowAllSugg(v => !v)}>Suggestions pour toi</SectionTitle>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:20 }}>
-            {events.slice(0,4).map((ev,i) => (
+            {(showAllSugg ? events : events.slice(0,4)).map((ev,i) => (
               <EventCard key={ev.id} ev={ev} idx={i+3} onClick={ev => navigate("detail", ev)} onLike={onLike} />
             ))}
           </div>
@@ -626,8 +628,9 @@ function MessagesView({ convos, setConvos }) {
 
 // ── PROFILE VIEW ───────────────────────────────────────────
 function ProfileView({ events, navigate, onLike }) {
+  const [showAllUpcoming, setShowAllUpcoming] = React.useState(false);
   const joinedAll = events.filter(e => e.joined && !e.past);
-  const upcoming = joinedAll.slice(0,3);
+  const upcoming = showAllUpcoming ? joinedAll : joinedAll.slice(0,3);
   const past = events.filter(e => e.past);
   const liked = events.filter(e => e.liked);
 
@@ -703,7 +706,7 @@ function ProfileView({ events, navigate, onLike }) {
       )}
 
       {/* Upcoming */}
-      <SectionTitle action="Voir tout">Événements à venir</SectionTitle>
+      <SectionTitle action={showAllUpcoming ? "Réduire" : "Voir tout"} onAction={() => setShowAllUpcoming(v => !v)}>Événements à venir</SectionTitle>
       {upcoming.length > 0 ? (
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20, marginBottom:48 }}>
           {upcoming.map((ev,i) => (
