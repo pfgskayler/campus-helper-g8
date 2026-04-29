@@ -351,16 +351,9 @@ function EventDetailView({ ev, navigate, onJoin, onLike }) {
 }
 
 // ── MESSAGES VIEW ──────────────────────────────────────────
-function MessagesView() {
+function MessagesView({ convos, setConvos }) {
   const [active, setActive] = React.useState(0);
   const [draft, setDraft] = React.useState("");
-  const [convos, setConvos] = React.useState(() => {
-    try {
-      const saved = localStorage.getItem("sv_convos");
-      if (saved) return JSON.parse(saved);
-    } catch(e) {}
-    return CONVOS_DATA.map(c => ({...c, msgs:[...c.msgs]}));
-  });
   const [typing, setTyping] = React.useState(false);
   const bottomRef = React.useRef(null);
   const convo = convos[active];
@@ -368,6 +361,11 @@ function MessagesView() {
   React.useEffect(() => {
     localStorage.setItem("sv_convos", JSON.stringify(convos));
   }, [convos]);
+
+  const openConvo = (i) => {
+    setActive(i);
+    setConvos(prev => prev.map((c, j) => j === i ? {...c, unread: 0} : c));
+  };
 
   React.useEffect(() => {
     if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior:"smooth" });
@@ -408,7 +406,7 @@ function MessagesView() {
         </div>
         <div style={{ overflowY:"auto", flex:1 }}>
           {convos.map((c,i) => (
-            <button key={c.id} onClick={()=>setActive(i)} className="sv-convo-row" style={{
+            <button key={c.id} onClick={()=>openConvo(i)} className="sv-convo-row" style={{
               width:"100%", padding:"14px 16px",
               display:"flex", gap:12, alignItems:"center", textAlign:"left",
               background: active===i ? T.muted : "none",

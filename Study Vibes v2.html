@@ -195,6 +195,13 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [events, setEvents] = useState(EVENTS_DATA);
   const [tweaks, setTweakState] = useState(TWEAK_DEFAULTS);
+  const [convos, setConvos] = useState(() => {
+    try {
+      const saved = localStorage.getItem("sv_convos");
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return CONVOS_DATA.map(c => ({...c, msgs:[...c.msgs]}));
+  });
 
   const navigate = (to, data) => {
     if (to === -1) {
@@ -227,7 +234,7 @@ function App() {
     window.parent.postMessage({type:"__edit_mode_set_keys", edits:next}, "*");
   };
 
-  const unread = CONVOS_DATA.reduce((n,c) => n+c.unread, 0);
+  const unread = convos.reduce((n,c) => n + (c.unread || 0), 0);
   const showNav = screen !== "auth";
 
   return (
@@ -242,7 +249,7 @@ function App() {
           : "96px 32px 0",
       }}>
         {screen==="home"     && <HomeView events={events} navigate={navigate} onLike={toggleLike} />}
-        {screen==="messages" && <MessagesView navigate={navigate} />}
+        {screen==="messages" && <MessagesView navigate={navigate} convos={convos} setConvos={setConvos} />}
         {screen==="profile"  && <ProfileView events={events} navigate={navigate} onLike={toggleLike} />}
         {screen==="detail"   && selectedEvent && (
           <EventDetailView ev={selectedEvent} navigate={navigate} onJoin={toggleJoin} onLike={toggleLike} />
