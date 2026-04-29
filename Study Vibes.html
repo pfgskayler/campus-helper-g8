@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Vibes – Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #EDE3F5 0%, #F5EDE3 50%, #E3EDF5 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  ::-webkit-scrollbar { display: none; }
+  * { scrollbar-width: none; }
+  button { cursor: pointer; font-family: 'Nunito', sans-serif; border: none; background: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef } = React;
+
+// ── DESIGN TOKENS ──────────────────────────────────────────
+const T = {
+  bg:      '#FAF7F0',
+  coral:   '#F4845F',
+  purple:  '#3D2B6B',
+  text:    '#1C1C2E',
+  sec:     '#8A8A9A',
+  card:    '#FFFFFF',
+  pill:    '#F0EBE3',
+  pillAct: '#F4845F',
+  border:  '#EDE8E0',
+  lilac:   '#E8E0F5',
+};
+
+// ── SAMPLE DATA ────────────────────────────────────────────
+const EVENTS = [
+  { id:1, title:"Session révisions Droit", date:"Mer 30 Avr", loc:"BU Paris 1", cat:"Révisions", img:"https://picsum.photos/seed/sv1/400/220", joined:false },
+  { id:2, title:"Coworking Café Beaubourg", date:"Jeu 1 Mai",  loc:"Café Merci, Paris",  cat:"Coworking", img:"https://picsum.photos/seed/sv2/400/220", joined:true },
+  { id:3, title:"Sortie karting étudiants", date:"Sam 3 Mai", loc:"Karting de Paris",   cat:"Sport",     img:"https://picsum.photos/seed/sv3/400/220", joined:false },
+  { id:4, title:"Jam session guitare",      date:"Ven 2 Mai", loc:"Studio M, Bastille", cat:"Musique",   img:"https://picsum.photos/seed/sv4/400/220", joined:false },
+  { id:5, title:"Révisions maths L2",       date:"Mar 29 Avr",loc:"Salle C204, Jussieu",cat:"Révisions", img:"https://picsum.photos/seed/sv5/400/220", joined:true  },
+  { id:6, title:"Afterwork étudiants",      date:"Ven 2 Mai", loc:"Le Baryton, Nation", cat:"Sortie",    img:"https://picsum.photos/seed/sv6/400/220", joined:false },
+];
+
+const CONVOS = [
+  { id:1, name:"Emma Laurent",      init:"EL", preview:"T'es dispo demain pour réviser ?", time:"14:32", unread:2,  color:"#F4845F" },
+  { id:2, name:"Session Droit S4",  init:"SD", preview:"Lucas : J'apporte les fiches !", time:"12:01", unread:5,  color:"#8B5CF6" },
+  { id:3, name:"Tom Ravel",         init:"TR", preview:"Super session hier 🙌",           time:"Hier",   unread:0,  color:"#3D2B6B" },
+  { id:4, name:"Coworking Café",    init:"CC", preview:"Sofia : On commence à 10h ?",     time:"Lun",    unread:0,  color:"#F4845F" },
+  { id:5, name:"Lucas Martin",      init:"LM", preview:"Salut, t'as les notes du TD ?",  time:"Dim",    unread:0,  color:"#059669" },
+];
+
+const CATS = ["Tous","Révisions","Coworking","Sport","Musique","Sortie","Art"];
+
+const SETTINGS_ITEMS = [
+  { section: "Compte", items: [
+    { icon:"👤", label:"Modifier le profil" },
+    { icon:"🔒", label:"Confidentialité" },
+    { icon:"🔗", label:"Réseaux liés" },
+  ]},
+  { section: "Préférences", items: [
+    { icon:"🔔", label:"Notifications" },
+    { icon:"🌙", label:"Mode sombre" },
+    { icon:"🌍", label:"Langue" },
+  ]},
+  { section: "Support", items: [
+    { icon:"❓", label:"Centre d'aide" },
+    { icon:"⭐", label:"Noter l'app" },
+    { icon:"📩", label:"Nous contacter" },
+  ]},
+  { section: "", items: [
+    { icon:"🚪", label:"Se déconnecter", danger: true },
+  ]},
+];
+
+// ── SMALL COMPONENTS ───────────────────────────────────────
+
+function Avatar({ init, color, size = 40 }) {
+  return (
+    <div style={{ width: size, height: size, borderRadius: size, background: color || T.coral,
+      display:"flex", alignItems:"center", justifyContent:"center",
+      color:"#fff", fontWeight:800, fontSize: size * 0.35, flexShrink:0 }}>
+      {init}
+    </div>
+  );
+}
+
+function JoinBtn({ joined, onToggle, small }) {
+  return (
+    <button onClick={onToggle} style={{
+      background: joined ? T.lilac : T.coral,
+      color: joined ? T.purple : "#fff",
+      border: "none", borderRadius: 50,
+      padding: small ? "6px 14px" : "9px 20px",
+      fontWeight:800, fontSize: small ? 12 : 14,
+      cursor:"pointer", whiteSpace:"nowrap",
+      transition:"all 0.2s",
+      boxShadow: joined ? "none" : "0 3px 12px rgba(244,132,95,0.35)"
+    }}>
+      {joined ? "✓ Rejoint" : "Rejoindre"}
+    </button>
+  );
+}
+
+function ParticipantDots({ count }) {
+  const colors = [T.coral, T.purple, "#059669", "#8B5CF6"];
+  const show = Math.min(count, 3);
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+      <div style={{ display:"flex" }}>
+        {Array.from({length: show}).map((_, i) => (
+          <div key={i} style={{
+            width:20, height:20, borderRadius:20,
+            background: colors[i % colors.length],
+            border:"2px solid #fff",
+            marginLeft: i > 0 ? -6 : 0,
+            display:"flex", alignItems:"center", justifyContent:"center",
+            fontSize:8, color:"#fff", fontWeight:800
+          }}>{String.fromCharCode(65 + i)}</div>
+        ))}
+      </div>
+      <span style={{ fontSize:11, color:T.sec, fontWeight:600 }}>{count} participant{count > 1 ? "s" : ""}</span>
+    </div>
+  );
+}
+
+const PARTICIPANTS = [8, 5, 12, 6, 4, 9];
+
+function EventCard({ ev, onToggleJoin, horizontal, idx = 0 }) {
+  const parts = PARTICIPANTS[idx % PARTICIPANTS.length];
+  return (
+    <div style={{
+      background: T.card, borderRadius: 20, overflow:"hidden",
+      boxShadow:"0 2px 16px rgba(0,0,0,0.06)",
+      width: horizontal ? 220 : "100%",
+      flexShrink: horizontal ? 0 : undefined,
+    }}>
+      <div style={{ position:"relative", height: horizontal ? 110 : 130 }}>
+        <img src={ev.img} alt={ev.title} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+        <span style={{
+          position:"absolute", top:10, left:10,
+          background:"rgba(255,255,255,0.92)", borderRadius:20,
+          padding:"3px 10px", fontSize:11, fontWeight:800, color: T.purple,
+          backdropFilter:"blur(4px)"
+        }}>{ev.cat}</span>
+      </div>
+      <div style={{ padding: horizontal ? "10px 12px 12px" : "14px 14px 14px" }}>
+        <div style={{ fontWeight:800, fontSize: horizontal ? 13 : 15, color:T.text,
+          marginBottom:6, lineHeight:1.3 }}>{ev.title}</div>
+        <div style={{ fontSize:12, color:T.sec, marginBottom:10, lineHeight:1.6 }}>
+          {ev.date} · {ev.loc}
+        </div>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          {!horizontal && <ParticipantDots count={parts} />}
+          <JoinBtn joined={ev.joined} onToggle={onToggleJoin} small={horizontal} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionTitle({ children, action }) {
+  return (
+    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+      <span style={{ fontSize:16, fontWeight:800, color:T.text }}>{children}</span>
+      {action && <button style={{ fontSize:13, color:T.coral, fontWeight:700 }}>{action}</button>}
+    </div>
+  );
+}
+
+// ── SCREENS ────────────────────────────────────────────────
+
+function CreateEventBtn() {
+  return (
+    <button style={{
+      width:"100%", borderRadius:18,
+      background:`linear-gradient(120deg, ${T.coral} 0%, #E8607A 100%)`,
+      color:"#fff", padding:"15px 20px",
+      display:"flex", alignItems:"center", justifyContent:"space-between",
+      boxShadow:"0 6px 20px rgba(244,132,95,0.4)",
+      border:"none", cursor:"pointer"
+    }}>
+      <div style={{ textAlign:"left" }}>
+        <div style={{ fontWeight:900, fontSize:16 }}>Créer un événement</div>
+        <div style={{ fontSize:12, opacity:0.85, marginTop:2 }}>Invite tes amis à te rejoindre</div>
+      </div>
+      <div style={{
+        width:40, height:40, borderRadius:40,
+        background:"rgba(255,255,255,0.25)",
+        display:"flex", alignItems:"center", justifyContent:"center",
+        fontSize:22, fontWeight:900, flexShrink:0
+      }}>+</div>
+    </button>
+  );
+}
+
+function HomeScreen({ events, onToggleJoin }) {
+  const [activeCat, setActiveCat] = useState("Tous");
+  const filtered = activeCat === "Tous" ? events : events.filter(e => e.cat === activeCat);
+  const actualite = filtered.slice(0, 4);
+  const suggestions = filtered.slice(0, 3);
+  const upcoming = filtered.slice(2, 5);
+
+  return (
+    <div style={{ background: T.bg, height:"100%", overflowY:"auto", paddingBottom:80 }}>
+      {/* Header */}
+      <div style={{ padding:"20px 16px 16px" }}>
+        <div style={{ fontSize:13, color:T.sec, fontWeight:600, marginBottom:2 }}>Bonjour 👋</div>
+        <div style={{ fontSize:21, fontWeight:900, color:T.text, marginBottom:14 }}>Que fais-tu aujourd'hui ?</div>
+
+        {/* Search bar */}
+        <div style={{ background:T.card, borderRadius:16, padding:"12px 16px",
+          display:"flex", alignItems:"center", gap:10, marginBottom:12,
+          boxShadow:"0 2px 10px rgba(0,0,0,0.05)" }}>
+          <span style={{ fontSize:16, opacity:0.5 }}>🔍</span>
+          <span style={{ color:T.sec, fontSize:14, fontWeight:600 }}>Commencez ma recherche…</span>
+        </div>
+
+        {/* CTA principal */}
+        <CreateEventBtn />
+      </div>
+
+      {/* Categories */}
+      <div style={{ padding:"0 16px 16px" }}>
+        <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2 }}>
+          {CATS.map(c => (
+            <button key={c} onClick={() => setActiveCat(c)} style={{
+              padding:"7px 16px", borderRadius:50, fontWeight:700, fontSize:13,
+              background: activeCat === c ? T.coral : T.card,
+              color: activeCat === c ? "#fff" : T.text,
+              whiteSpace:"nowrap", transition:"all 0.2s", flexShrink:0,
+              boxShadow: activeCat === c ? "0 3px 10px rgba(244,132,95,0.3)" : "0 1px 4px rgba(0,0,0,0.06)"
+            }}>{c}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Actualité */}
+      <div style={{ padding:"0 16px 20px" }}>
+        <SectionTitle action="Voir tout">Actualité</SectionTitle>
+        <div style={{ display:"flex", gap:12, overflowX:"auto", paddingBottom:4 }}>
+          {actualite.map((ev, i) => (
+            <EventCard key={ev.id} ev={ev} idx={i} horizontal onToggleJoin={() => onToggleJoin(ev.id)} />
+          ))}
+        </div>
+      </div>
+
+      {/* Suggestions */}
+      <div style={{ padding:"0 16px 20px" }}>
+        <SectionTitle action="Voir tout">Suggestions pour toi</SectionTitle>
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          {suggestions.map((ev, i) => (
+            <EventCard key={ev.id} ev={ev} idx={i} onToggleJoin={() => onToggleJoin(ev.id)} />
+          ))}
+        </div>
+      </div>
+
+      {/* Événements à venir */}
+      <div style={{ padding:"0 16px 20px" }}>
+        <SectionTitle>Événements à venir</SectionTitle>
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {upcoming.map(ev => (
+            <div key={ev.id} style={{
+              background:T.card, borderRadius:16, padding:"12px 14px",
+              display:"flex", gap:12, alignItems:"center",
+              boxShadow:"0 2px 8px rgba(0,0,0,0.05)"
+            }}>
+              <div style={{ background:T.lilac, borderRadius:12, padding:"8px 10px", textAlign:"center", flexShrink:0, minWidth:46 }}>
+                <div style={{ fontSize:10, fontWeight:700, color:T.purple }}>{ev.date.split(" ")[0]}</div>
+                <div style={{ fontSize:18, fontWeight:900, color:T.purple, lineHeight:1.1 }}>{ev.date.split(" ")[1]}</div>
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontWeight:800, fontSize:14, color:T.text, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{ev.title}</div>
+                <div style={{ fontSize:12, color:T.sec, marginTop:2 }}>{ev.loc}</div>
+              </div>
+              <JoinBtn joined={ev.joined} onToggle={() => onToggleJoin(ev.id)} small />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SearchScreen({ events, onToggleJoin }) {
+  const [query, setQuery] = useState("");
+  const [focused, setFocused] = useState(false);
+  const results = query.trim()
+    ? events.filter(e =>
+        e.title.toLowerCase().includes(query.toLowerCase()) ||
+        e.cat.toLowerCase().includes(query.toLowerCase()) ||
+        e.loc.toLowerCase().includes(query.toLowerCase())
+      )
+    : events;
+
+  return (
+    <div style={{ background:T.bg, height:"100%", overflowY:"auto", paddingBottom:80 }}>
+      <div style={{ padding:"20px 16px 16px" }}>
+        <div style={{ fontSize:20, fontWeight:900, color:T.text, marginBottom:14 }}>Recherche</div>
+        <div style={{
+          background:T.card, borderRadius:16, padding:"12px 16px",
+          display:"flex", alignItems:"center", gap:10,
+          boxShadow: focused ? `0 0 0 2px ${T.coral}` : "0 2px 10px rgba(0,0,0,0.05)",
+          transition:"box-shadow 0.2s"
+        }}>
+          <span style={{ fontSize:16, opacity:0.5 }}>🔍</span>
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder="Événement, lieu, catégorie…"
+            style={{ border:"none", outline:"none", background:"none",
+              fontSize:14, fontWeight:600, color:T.text, flex:1,
+              fontFamily:"'Nunito', sans-serif" }}
+          />
+          {query && <button onClick={() => setQuery("")} style={{ color:T.sec, fontSize:16 }}>✕</button>}
+        </div>
+
+        {!query && (
+          <div style={{ marginTop:12, display:"flex", gap:8, flexWrap:"wrap" }}>
+            {["🎓 Révisions","☕ Coworking","🎵 Musique","⚽ Sport"].map(t => (
+              <button key={t} onClick={() => setQuery(t.split(" ")[1])} style={{
+                background:T.card, borderRadius:50, padding:"6px 14px",
+                fontWeight:700, fontSize:13, color:T.text,
+                boxShadow:"0 1px 4px rgba(0,0,0,0.06)"
+              }}>{t}</button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{ padding:"0 16px 16px" }}>
+        <div style={{ fontSize:12, color:T.sec, fontWeight:700, marginBottom:12, textTransform:"uppercase", letterSpacing:0.5 }}>
+          {query ? `${results.length} résultat${results.length !== 1 ? "s" : ""}` : "Tous les événements"}
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          {results.map((ev, i) => (
+            <EventCard key={ev.id} ev={ev} idx={i} onToggleJoin={() => onToggleJoin(ev.id)} />
+          ))}
+          {results.length === 0 && (
+            <div style={{ textAlign:"center", padding:"40px 20px", color:T.sec }}>
+              <div style={{ fontSize:40, marginBottom:10 }}>🔭</div>
+              <div style={{ fontWeight:700 }}>Aucun résultat trouvé</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MessagesScreen() {
+  const [active, setActive] = useState(null);
+
+  if (active !== null) {
+    const convo = CONVOS[active];
+    return (
+      <div style={{ background:T.bg, height:"100%", display:"flex", flexDirection:"column" }}>
+        <div style={{ background:T.card, padding:"16px 16px 12px",
+          display:"flex", alignItems:"center", gap:12,
+          boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
+          <button onClick={() => setActive(null)} style={{ color:T.text, fontSize:20 }}>←</button>
+          <Avatar init={convo.init} color={convo.color} size={36} />
+          <div>
+            <div style={{ fontWeight:800, fontSize:15, color:T.text }}>{convo.name}</div>
+            <div style={{ fontSize:12, color:"#22c55e", fontWeight:600 }}>En ligne</div>
+          </div>
+        </div>
+        <div style={{ flex:1, overflowY:"auto", padding:"16px", display:"flex", flexDirection:"column", gap:10 }}>
+          {/* Faux messages */}
+          {[
+            { me:false, txt:"Salut ! Tu as vu l'événement révisions de demain ?" },
+            { me:true,  txt:"Oui ! Je pensais y aller, t'es dispo ?" },
+            { me:false, txt:"Carrément, on peut y aller ensemble si tu veux 🎉" },
+            { me:true,  txt:"Super idée ! On se retrouve à 9h ?" },
+          ].map((m, i) => (
+            <div key={i} style={{ display:"flex", justifyContent: m.me ? "flex-end" : "flex-start" }}>
+              <div style={{
+                background: m.me ? T.coral : T.card,
+                color: m.me ? "#fff" : T.text,
+                borderRadius: m.me ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                padding:"10px 14px", fontSize:14, fontWeight:600,
+                maxWidth:"75%", boxShadow:"0 2px 8px rgba(0,0,0,0.06)"
+              }}>{m.txt}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ padding:"12px 16px", background:T.card, display:"flex", gap:10 }}>
+          <input placeholder="Écrire un message…" style={{
+            flex:1, background:T.pill, borderRadius:50, border:"none", outline:"none",
+            padding:"11px 16px", fontSize:14, fontFamily:"'Nunito', sans-serif", fontWeight:600, color:T.text
+          }} />
+          <button style={{ background:T.coral, borderRadius:50, width:42, height:42,
+            display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>➤</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background:T.bg, height:"100%", overflowY:"auto", paddingBottom:80 }}>
+      <div style={{ padding:"20px 20px 16px" }}>
+        <div style={{ fontSize:20, fontWeight:900, color:T.text }}>Messages</div>
+      </div>
+      <div style={{ padding:"0 16px", display:"flex", flexDirection:"column", gap:2 }}>
+        {CONVOS.map((c, i) => (
+          <button key={c.id} onClick={() => setActive(i)} style={{
+            background:T.card, borderRadius:16, padding:"14px 14px",
+            display:"flex", alignItems:"center", gap:12, textAlign:"left", width:"100%",
+            marginBottom:6, boxShadow:"0 2px 8px rgba(0,0,0,0.04)"
+          }}>
+            <div style={{ position:"relative" }}>
+              <Avatar init={c.init} color={c.color} size={46} />
+              {c.unread > 0 && (
+                <div style={{ position:"absolute", top:-2, right:-2,
+                  background:T.coral, borderRadius:50, width:18, height:18,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:10, color:"#fff", fontWeight:800 }}>{c.unread}</div>
+              )}
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
+                <span style={{ fontWeight:800, fontSize:15, color:T.text }}>{c.name}</span>
+                <span style={{ fontSize:12, color:T.sec }}>{c.time}</span>
+              </div>
+              <div style={{ fontSize:13, color:T.sec, whiteSpace:"nowrap", overflow:"hidden",
+                textOverflow:"ellipsis", fontWeight: c.unread > 0 ? 700 : 500 }}>{c.preview}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProfileScreen({ onGoSettings, events }) {
+  const myEvents = events.filter(e => e.joined);
+  return (
+    <div style={{ background:T.bg, height:"100%", overflowY:"auto", paddingBottom:80 }}>
+      {/* Header */}
+      <div style={{ background:T.purple, padding:"28px 20px 60px", position:"relative" }}>
+        <button onClick={onGoSettings} style={{
+          position:"absolute", top:24, right:20, color:"#fff",
+          background:"rgba(255,255,255,0.15)", borderRadius:12, padding:"6px 10px", fontSize:18
+        }}>⚙️</button>
+        <div style={{ textAlign:"center" }}>
+          <div style={{
+            width:80, height:80, borderRadius:80, background:T.coral,
+            margin:"0 auto 12px", border:"4px solid rgba(255,255,255,0.3)",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            fontSize:32, fontWeight:900, color:"#fff"
+          }}>M</div>
+          <div style={{ fontSize:20, fontWeight:900, color:"#fff" }}>Marie Dupont</div>
+          <div style={{ fontSize:13, color:"rgba(255,255,255,0.65)", marginTop:2 }}>@marie.dupont · Paris 1</div>
+          <div style={{ display:"flex", justifyContent:"center", gap:24, marginTop:16 }}>
+            {[["4","Événements"],["12","Amis"],["3","Créés"]].map(([n,l]) => (
+              <div key={l} style={{ textAlign:"center" }}>
+                <div style={{ fontSize:20, fontWeight:900, color:"#fff" }}>{n}</div>
+                <div style={{ fontSize:11, color:"rgba(255,255,255,0.6)" }}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div style={{ margin:"-22px 20px 20px", display:"flex", gap:10 }}>
+        <button style={{
+          flex:1, background:T.coral, color:"#fff",
+          borderRadius:14, padding:"12px", fontWeight:800, fontSize:14
+        }}>✏️ Modifier le profil</button>
+        <button style={{
+          background:T.card, borderRadius:14, padding:"12px 16px",
+          fontSize:18, boxShadow:"0 2px 10px rgba(0,0,0,0.08)"
+        }}>📤</button>
+      </div>
+
+      {/* Bio */}
+      <div style={{ margin:"0 20px 20px", background:T.card, borderRadius:16, padding:"14px" }}>
+        <div style={{ fontSize:13, fontWeight:700, color:T.sec, marginBottom:6 }}>À propos</div>
+        <div style={{ fontSize:14, color:T.text, lineHeight:1.5 }}>Étudiante en droit à Paris 1 🎓 · Passionnée de musique et coworking ☕</div>
+      </div>
+
+      {/* Mes événements */}
+      <div style={{ padding:"0 20px" }}>
+        <SectionTitle>Mes événements ({myEvents.length})</SectionTitle>
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          {myEvents.map(ev => (
+            <div key={ev.id} style={{
+              background:T.card, borderRadius:16, overflow:"hidden",
+              display:"flex", boxShadow:"0 2px 10px rgba(0,0,0,0.05)"
+            }}>
+              <img src={ev.img} alt={ev.title}
+                style={{ width:80, height:80, objectFit:"cover", flexShrink:0 }} />
+              <div style={{ padding:"12px 14px", flex:1, minWidth:0 }}>
+                <div style={{ fontSize:12, fontWeight:700, color:T.coral, marginBottom:2 }}>{ev.cat}</div>
+                <div style={{ fontSize:14, fontWeight:800, color:T.text, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{ev.title}</div>
+                <div style={{ fontSize:12, color:T.sec }}>📅 {ev.date}</div>
+              </div>
+            </div>
+          ))}
+          {myEvents.length === 0 && (
+            <div style={{ textAlign:"center", padding:30, color:T.sec, fontWeight:600 }}>
+              Rejoins ton premier événement !
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SettingsScreen({ onBack }) {
+  const [toggles, setToggles] = useState({ notifs: true, dark: false });
+  return (
+    <div style={{ background:T.bg, height:"100%", overflowY:"auto", paddingBottom:80 }}>
+      <div style={{ padding:"20px 20px 16px", display:"flex", alignItems:"center", gap:12 }}>
+        <button onClick={onBack} style={{ color:T.text, fontSize:22 }}>←</button>
+        <div style={{ fontSize:20, fontWeight:900, color:T.text }}>Paramètres</div>
+      </div>
+      {SETTINGS_ITEMS.map((group, gi) => (
+        <div key={gi} style={{ margin:"0 16px 16px" }}>
+          {group.section && (
+            <div style={{ fontSize:12, fontWeight:800, color:T.sec, textTransform:"uppercase",
+              letterSpacing:1, marginBottom:8, paddingLeft:4 }}>{group.section}</div>
+          )}
+          <div style={{ background:T.card, borderRadius:16, overflow:"hidden",
+            boxShadow:"0 2px 8px rgba(0,0,0,0.05)" }}>
+            {group.items.map((item, ii) => (
+              <button key={ii} style={{
+                width:"100%", padding:"15px 16px", display:"flex", alignItems:"center", gap:12,
+                borderBottom: ii < group.items.length - 1 ? `1px solid ${T.border}` : "none",
+                textAlign:"left"
+              }}>
+                <span style={{ fontSize:20, width:28, textAlign:"center" }}>{item.icon}</span>
+                <span style={{ flex:1, fontWeight:700, fontSize:15,
+                  color: item.danger ? "#EF4444" : T.text }}>{item.label}</span>
+                {item.label === "Notifications" && (
+                  <div onClick={() => setToggles(t => ({...t, notifs: !t.notifs}))} style={{
+                    width:46, height:26, borderRadius:50,
+                    background: toggles.notifs ? T.coral : T.border,
+                    position:"relative", transition:"background 0.2s"
+                  }}>
+                    <div style={{
+                      position:"absolute", top:3, left: toggles.notifs ? 23 : 3,
+                      width:20, height:20, borderRadius:50, background:"#fff",
+                      transition:"left 0.2s", boxShadow:"0 1px 4px rgba(0,0,0,0.2)"
+                    }}></div>
+                  </div>
+                )}
+                {item.label === "Mode sombre" && (
+                  <div onClick={() => setToggles(t => ({...t, dark: !t.dark}))} style={{
+                    width:46, height:26, borderRadius:50,
+                    background: toggles.dark ? T.coral : T.border,
+                    position:"relative", transition:"background 0.2s"
+                  }}>
+                    <div style={{
+                      position:"absolute", top:3, left: toggles.dark ? 23 : 3,
+                      width:20, height:20, borderRadius:50, background:"#fff",
+                      transition:"left 0.2s", boxShadow:"0 1px 4px rgba(0,0,0,0.2)"
+                    }}></div>
+                  </div>
+                )}
+                {!item.danger && item.label !== "Notifications" && item.label !== "Mode sombre" && (
+                  <span style={{ color:T.sec }}>›</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── BOTTOM NAV ─────────────────────────────────────────────
+const NAV_ITEMS = [
+  { id:"home",     icon:"🏠", label:"Accueil"  },
+  { id:"search",   icon:"🔍", label:"Recherche" },
+  { id:"messages", icon:"💬", label:"Messages"  },
+  { id:"profile",  icon:"👤", label:"Profil"    },
+];
+
+function BottomNav({ current, onChange, unreadCount }) {
+  return (
+    <div style={{
+      position:"absolute", bottom:0, left:0, right:0, height:70,
+      background:T.card, borderTop:`1px solid ${T.border}`,
+      display:"flex", alignItems:"center", justifyContent:"space-around",
+      paddingBottom:8, zIndex:100
+    }}>
+      {NAV_ITEMS.map(item => {
+        const active = current === item.id;
+        return (
+          <button key={item.id} onClick={() => onChange(item.id)} style={{
+            display:"flex", flexDirection:"column", alignItems:"center", gap:2,
+            padding:"4px 14px", borderRadius:14,
+            background: active ? T.lilac : "none",
+            transition:"all 0.2s", position:"relative"
+          }}>
+            <span style={{ fontSize:21 }}>{item.icon}</span>
+            <span style={{ fontSize:10, fontWeight: active ? 800 : 600,
+              color: active ? T.purple : T.sec }}>{item.label}</span>
+            {item.id === "messages" && unreadCount > 0 && (
+              <div style={{
+                position:"absolute", top:0, right:8,
+                background:T.coral, borderRadius:50, width:16, height:16,
+                display:"flex", alignItems:"center", justifyContent:"center",
+                fontSize:9, color:"#fff", fontWeight:800
+              }}>{unreadCount}</div>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── FAB ────────────────────────────────────────────────────
+function Fab({ onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      position:"absolute", bottom:80, right:16, zIndex:200,
+      width:52, height:52, borderRadius:52,
+      background: T.purple,
+      color:"#fff", fontSize:24, fontWeight:900,
+      boxShadow:"0 6px 24px rgba(61,43,107,0.35)",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      transition:"transform 0.15s"
+    }}>+</button>
+  );
+}
+
+// ── ROOT APP ───────────────────────────────────────────────
+function App() {
+  const [screen, setScreen] = useState("home");
+  const [events, setEvents] = useState(EVENTS);
+  const [tweaks, setTweakState] = useState(TWEAK_DEFAULTS);
+
+  const toggleJoin = (id) => {
+    setEvents(evs => evs.map(e => e.id === id ? {...e, joined: !e.joined} : e));
+  };
+  const setTweak = (k, v) => {
+    const next = typeof k === "object" ? {...tweaks, ...k} : {...tweaks, [k]: v};
+    setTweakState(next);
+    window.parent.postMessage({ type:'__edit_mode_set_keys', edits: next }, '*');
+  };
+
+  const unread = CONVOS.reduce((n, c) => n + c.unread, 0);
+  const isSettings = screen === "settings";
+
+  return (
+    <div style={{ fontFamily:"'Nunito', sans-serif", position:"relative", height:"100%",
+      fontSize: tweaks.fontSize }}>
+      {/* Screens */}
+      {screen === "home"     && <HomeScreen events={events} onToggleJoin={toggleJoin} />}
+      {screen === "search"   && <SearchScreen events={events} onToggleJoin={toggleJoin} />}
+      {screen === "messages" && <MessagesScreen />}
+      {screen === "profile"  && <ProfileScreen onGoSettings={() => setScreen("settings")} events={events} />}
+      {screen === "settings" && <SettingsScreen onBack={() => setScreen("profile")} />}
+
+      {/* Bottom Nav */}
+      {!isSettings && (
+        <BottomNav current={screen} onChange={setScreen} unreadCount={unread} />
+      )}
+
+      {/* Tweaks */}
+      <TweaksPanel tweaks={tweaks} setTweak={setTweak}>
+        <TweakSection title="Couleurs">
+          <TweakColor label="Accent (corail)" id="accentColor" tweaks={tweaks} setTweak={setTweak} />
+          <TweakColor label="Violet" id="purpleColor" tweaks={tweaks} setTweak={setTweak} />
+          <TweakColor label="Fond" id="bgColor" tweaks={tweaks} setTweak={setTweak} />
+        </TweakSection>
+        <TweakSection title="Texte">
+          <TweakSlider label="Taille du texte" id="fontSize" min={12} max={18} step={1} tweaks={tweaks} setTweak={setTweak} />
+        </TweakSection>
+        <TweakSection title="Écran de démo">
+          <TweakRadio label="Écran" id="demoScreen"
+            options={[{label:"Accueil",value:"home"},{label:"Recherche",value:"search"},{label:"Messages",value:"messages"},{label:"Profil",value:"profile"}]}
+            tweaks={tweaks} setTweak={(k,v) => { setTweak(k,v); setScreen(v); }} />
+        </TweakSection>
+      </TweaksPanel>
+    </div>
+  );
+}
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accentColor": "#F4845F",
+  "purpleColor": "#3D2B6B",
+  "bgColor": "#FAF7F0",
+  "fontSize": 14,
+  "demoScreen": "home"
+}/*EDITMODE-END*/;
+
+// Apply tweaks via CSS custom properties (optional future hook)
+const root = document.getElementById("root");
+ReactDOM.createRoot(root).render(<IOSDevice><App /></IOSDevice>);
+</script>
+</body>
+</html>

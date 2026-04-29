@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Vibes – Bordeaux</title>
+<link href="https://fonts.googleapis.com/css2?family=Rammetto+One&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="sv-shared.jsx"></script>
+<script type="text/babel" src="sv-screens.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { height: 100%; }
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background: #FFF9EC;
+    color: #5D2A42;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #EEE0D4; border-radius: 3px; }
+  button, input, textarea, select { font-family: 'Montserrat', sans-serif; }
+
+  /* ── HOVER SYSTEM ────────────────────────────── */
+
+  /* Nav links */
+  .sv-navlink { transition: color 0.18s, background 0.18s !important; }
+  .sv-navlink:hover { color: #FB6376 !important; background: rgba(251,99,118,0.08) !important; }
+
+  /* Primary buttons */
+  .sv-btn-primary { transition: background 0.18s, box-shadow 0.18s, transform 0.18s !important; }
+  .sv-btn-primary:hover { background: #E84D62 !important; box-shadow: 0 6px 22px rgba(251,99,118,0.45) !important; transform: translateY(-1px) !important; }
+  .sv-btn-primary:active { transform: translateY(0) !important; }
+
+  /* Ghost / secondary buttons */
+  .sv-btn-ghost { transition: background 0.18s, border-color 0.18s, color 0.18s !important; }
+  .sv-btn-ghost:hover { background: #FDE8EC !important; border-color: #FB6376 !important; color: #FB6376 !important; }
+
+  /* Purple buttons */
+  .sv-btn-purple { transition: background 0.18s, box-shadow 0.18s, transform 0.18s !important; }
+  .sv-btn-purple:hover { background: #4A1F32 !important; box-shadow: 0 6px 20px rgba(93,42,66,0.35) !important; transform: translateY(-1px) !important; }
+
+  /* Category pills */
+  .sv-pill { transition: all 0.18s !important; }
+  .sv-pill:not(.sv-pill-active):hover { background: #FDE8EC !important; color: #FB6376 !important; border-color: rgba(251,99,118,0.4) !important; }
+
+  /* Event card image zoom */
+  .sv-card-img-wrap { overflow: hidden; }
+  .sv-card-img-wrap img { transition: transform 0.32s ease !important; }
+  .sv-card:hover .sv-card-img-wrap img { transform: scale(1.06) !important; }
+
+  /* Search bar */
+  .sv-search { transition: box-shadow 0.2s, border-color 0.2s !important; }
+  .sv-search:hover { box-shadow: 0 0 0 2px rgba(251,99,118,0.18), 0 8px 28px rgba(0,0,0,0.14) !important; }
+  .sv-search:focus-within { box-shadow: 0 0 0 3px rgba(251,99,118,0.32), 0 8px 32px rgba(0,0,0,0.18) !important; }
+
+  /* Conversation rows */
+  .sv-convo-row { transition: background 0.15s !important; }
+  .sv-convo-row:hover { background: #FEF5E7 !important; }
+
+  /* Auth toggle buttons */
+  .sv-auth-tab { transition: all 0.18s !important; }
+
+  /* Settings / list rows */
+  .sv-list-row { transition: background 0.15s !important; }
+  .sv-list-row:hover { background: #FEF5E7 !important; }
+
+  /* Past event cards on profile */
+  .sv-past-card { transition: opacity 0.18s, box-shadow 0.18s !important; }
+  .sv-past-card:hover { opacity: 1 !important; box-shadow: 0 4px 16px rgba(93,42,66,0.12) !important; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState } = React;
+
+// ── LOGO SVG (inline, top section cropped) ─────────────────
+function Logo({ height = 40 }) {
+  // Crop to top section: speech bubbles + "Study Vibes" text (y 0–170)
+  return (
+    <svg viewBox="30 0 250 170" height={height} style={{ display:"block" }}
+      xmlns="http://www.w3.org/2000/svg">
+      <style>{`.sv-cls1{fill:#5D2A42}.sv-cls2{fill:#FB6376}`}</style>
+      {/* Left bubble (coral) */}
+      <path className="sv-cls2" d="M130.99,53.56c-1.33-19.29,7.64-33.02,10.36-36.89C137.93,13.19,123.74-.47,103.75.1c-27.89.79-51.56,28.85-49.91,55.49,1.11,17.81,13.55,35.26,28.42,42.29,11.28,5.34,18.94,2.32,27.07,10.32,10.34,10.18,6.83,23.82,12.69,25,7.18,1.45,17.4-17.97,21.48-27.54,2.46-5.77,3.94-10.93,4.87-14.92-3.15-3.04-15.93-16.08-17.39-37.19ZM110.33,27.66c5.5,0,9.96,4.41,9.96,9.84s-4.46,9.84-9.96,9.84-9.96-4.41-9.96-9.84,4.46-9.84,9.96-9.84ZM83.4,68.71c4.34-9.07,13.66-14.64,23.42-14.05,8.78.53,16.65,5.94,20.5,14.05h-43.92Z" />
+      {/* Right bubble (purple) */}
+      <path className="sv-cls1" d="M218.29,10.84c-2.41-1.91-16.01-12.33-35.19-10.66-18.93,1.65-38.16,14.64-44.32,35.87-5.53,19.06.9,39.81,16.34,52.65-.51,4.45-1.13,10.06-1.79,16.54-1.81,17.6-1.69,19.73-.25,20.64,3.21,2.03,9.18-4.49,28.51-16.07,3.73-2.23,6.8-3.96,8.68-5.01,24.89-4.74,43.71-23.72,46.81-46.42,2.27-16.63-3.84-35.69-18.78-47.54ZM182.31,27.55c5.31,0,9.61,4.28,9.61,9.56s-4.3,9.56-9.61,9.56-9.61-4.28-9.61-9.56,4.3-9.56,9.61-9.56ZM163.89,68.71c3.94-8.85,12.8-14.51,22.41-14.33,9.29.17,17.7,5.78,21.51,14.33h-43.92Z" />
+      {/* "Study Vibes" text paths */}
+      <g className="sv-cls1">
+        <path d="M51.6,164.62c0-.12.18-.27.55-.46s.83-.41,1.38-.67,1.15-.55,1.78-.89,1.23-.7,1.78-1.11,1.01-.85,1.38-1.33.55-1,.55-1.56c-.42,0-.83.03-1.22.08s-.78.11-1.17.17-.78.11-1.18.17-.81.08-1.23.08-.95-.02-1.55-.07-1.22-.13-1.86-.25-1.28-.27-1.9-.47-1.18-.44-1.67-.75-.89-.67-1.2-1.08-.46-.91-.46-1.47.13-1.22.39-1.93.62-1.46,1.07-2.25.99-1.58,1.6-2.39,1.27-1.59,1.98-2.35,1.44-1.47,2.21-2.14,1.52-1.25,2.28-1.75,1.49-.89,2.2-1.18,1.36-.43,1.96-.43c.25,0,.57.03.98.08s.86.13,1.34.25.97.25,1.46.42.94.37,1.34.61.73.5.98.79.38.62.38.98c0,.18-.04.45-.13.83s-.21.82-.36,1.31-.33,1.03-.54,1.6-.43,1.15-.69,1.71-.52,1.12-.79,1.64-.56,1-.84,1.41-.57.74-.86.98-.57.36-.83.36c-.2,0-.46-.03-.77-.08s-.65-.13-1-.23-.71-.22-1.07-.36-.69-.3-.98-.47-.52-.37-.7-.58-.27-.44-.27-.69v-.23l1.44-3.13v-.72c-.36.2-.76.49-1.2.87s-.87.82-1.32,1.32-.88,1.04-1.29,1.62-.79,1.17-1.12,1.76-.59,1.17-.78,1.74-.29,1.09-.29,1.57c0,.13.05.2.14.22s.21.03.33.03c.6,0,1.2-.06,1.79-.18s1.2-.26,1.8-.41,1.2-.29,1.8-.41,1.2-.18,1.79-.18c.28,0,.67.02,1.15.06s1.02.11,1.59.21,1.15.23,1.73.39,1.11.35,1.59.58.87.5,1.17.81.45.67.45,1.06c0,.56-.16,1.14-.49,1.74s-.76,1.18-1.31,1.75-1.16,1.11-1.85,1.62-1.4.96-2.13,1.34-1.44.68-2.14.91-1.34.33-1.9.33c-.08,0-.27,0-.56,0s-.64-.02-1.03-.04-.81-.05-1.24-.11-.83-.12-1.2-.21-.67-.2-.91-.33-.36-.3-.36-.5Z" />
+        <path d="M68.21,158.6c0-1.44.04-2.84.11-4.19s.11-2.75.11-4.19v-2.65c-.12-.2-.34-.36-.66-.49s-.69-.25-1.1-.35-.83-.21-1.27-.32-.84-.23-1.21-.38-.67-.33-.91-.54-.36-.47-.36-.79c2.34-.54,4.46-1.02,6.36-1.44.81-.18,1.61-.35,2.41-.53s1.52-.33,2.17-.47,1.2-.24,1.65-.33.74-.12.85-.12c.25,0,.57.03.98.1s.8.16,1.19.29.72.3,1.01.51.43.47.43.77-.09.57-.27.76-.41.35-.69.46-.58.2-.91.26-.64.13-.95.2-.57.16-.8.26-.38.26-.47.46c-.15.33-.26.85-.33,1.56s-.12,1.54-.16,2.48-.06,1.95-.08,3.04-.05,2.18-.1,3.27-.12,2.14-.21,3.15-.23,1.9-.41,2.67-.42,1.39-.72,1.85-.67.69-1.12.69c-.96,0-1.74-.14-2.33-.43s-1.05-.69-1.38-1.22-.55-1.16-.67-1.9-.18-1.56-.18-2.46Z" />
+        <path d="M77.91,158.13v-3.83c0-.2,0-.56-.03-1.07s-.02-1.1,0-1.77.06-1.35.12-2.06.18-1.36.33-1.95.38-1.08.66-1.46.64-.57,1.07-.57c.2,0,.45.02.76.06s.62.1.96.18.67.17,1.01.29.64.25.91.41.49.34.66.54.25.42.25.67c0,.67-.05,1.33-.15,2s-.21,1.32-.33,1.98-.23,1.32-.33,1.98-.15,1.32-.15,1.98v3.36c0,.12,0,.25,0,.39s.03.27.08.39.12.22.22.3.24.12.41.12c.36,0,.71-.18,1.04-.54s.64-.84.93-1.44.57-1.3.83-2.08.5-1.6.71-2.45.41-1.7.59-2.55.33-1.64.46-2.37.23-1.38.32-1.94.14-.98.18-1.25c0-.13.05-.21.15-.25s.21-.06.33-.06c.11,0,.22.01.33.04l.14.04c.96,0,1.78.18,2.45.54s1.24.84,1.69,1.46.81,1.33,1.06,2.15.45,1.7.56,2.63.18,1.89.2,2.88.01,1.96-.02,2.9-.07,1.84-.11,2.7-.07,1.61-.07,2.27c0,.29-.07.56-.2.8s-.31.44-.52.61-.44.29-.69.38-.5.13-.75.13c-.43,0-.81-.06-1.12-.19s-.59-.29-.81-.49-.41-.41-.55-.63-.27-.43-.38-.63-.19-.36-.26-.49-.15-.19-.23-.19h-.25c-.23.29-.51.6-.83.91s-.67.6-1.05.85-.77.46-1.19.62-.83.25-1.26.25c-1.14,0-2.18-.13-3.13-.4s-1.78-.67-2.48-1.21-1.27-1.22-1.71-2.03-.72-1.76-.83-2.84Z" />
+        <path d="M98.93,160.05c0-.77.04-1.56.11-2.37s.16-1.62.25-2.43.17-1.61.25-2.42.11-1.6.11-2.38v-1.44c-.16-.25-.4-.45-.71-.61s-.65-.3-1.03-.43-.76-.25-1.15-.38-.75-.27-1.06-.43-.58-.37-.78-.61-.31-.54-.31-.91c0-.33.14-.64.41-.93s.65-.57,1.12-.82,1.01-.49,1.62-.7,1.25-.41,1.92-.58,1.34-.32,2.02-.45,1.32-.24,1.92-.33,1.15-.16,1.63-.2.86-.07,1.12-.07c.56,0,1.23.06,2,.19s1.58.32,2.42.57,1.67.56,2.49.92,1.56.78,2.21,1.24,1.17.97,1.57,1.52.6,1.15.6,1.79c0,.45-.12,1.03-.36,1.77s-.57,1.54-.98,2.42-.91,1.81-1.48,2.79-1.18,1.95-1.83,2.9-1.33,1.86-2.04,2.72-1.42,1.62-2.12,2.29-1.39,1.19-2.06,1.57-1.29.58-1.86.58c-.35,0-.75-.06-1.19-.18s-.88-.3-1.33-.52-.88-.49-1.29-.79-.79-.64-1.11-.99-.58-.73-.78-1.12-.3-.79-.3-1.19ZM106.37,154.3l.49-.49c.41-.68.8-1.34,1.18-1.97.32-.55.64-1.11.96-1.67s.57-1.03.75-1.39c.12-.25.25-.49.39-.73s.27-.49.39-.75.22-.52.3-.8.12-.56.12-.85c0-.18-.01-.31-.04-.41s-.08-.17-.14-.22-.14-.07-.23-.08-.19,0-.31,0-.34,0-.66.03-.69.05-1.1.09-1.03.22-1.87.54-.99,3.14-.45,8.46l.23.25Z" />
+        <path d="M122.89,164.84v-.95c0-.6.09-1.19.26-1.77s.37-1.15.58-1.72.4-1.14.58-1.71.26-1.16.26-1.76c0-.48-.13-1.02-.4-1.62s-.61-1.22-1.04-1.88-.9-1.33-1.42-2.02-1.04-1.37-1.56-2.02-1-1.28-1.45-1.88-.82-1.14-1.1-1.62v-.47c0-.13.02-.24.06-.34s.18-.15.41-.15c.71,0,1.38.17,1.99.52s1.17.78,1.68,1.29.98,1.07,1.41,1.67.82,1.15,1.19,1.67.7.95,1.01,1.29.61.52.89.52c.18,0,.36-.15.55-.46s.39-.7.6-1.2.42-1.05.66-1.69.48-1.28.75-1.94.54-1.31.84-1.94.62-1.2.96-1.69.71-.89,1.1-1.2.81-.46,1.26-.46c.36,0,.72.07,1.07.2s.69.31,1,.52.61.45.87.7.48.5.66.74v.25s-.09.29-.28.73-.44,1.01-.76,1.72-.7,1.53-1.14,2.47-.91,1.93-1.42,2.97-1.03,2.11-1.58,3.2-1.1,2.15-1.65,3.19-1.09,2.01-1.62,2.93-1.02,1.71-1.47,2.4-.86,1.23-1.21,1.63-.64.6-.85.6c-.18,0-.34,0-.5,0s-.3-.03-.44-.08-.26-.12-.39-.22-.24-.24-.36-.41Z" />
+        <path d="M145.57,164.84c0-1.86-.04-3.66-.11-5.39s-.19-3.44-.37-5.13-.42-3.39-.73-5.1-.71-3.45-1.19-5.25v-.25l.25-.47h.72c.93,0,1.7.07,2.31.21s1.12.33,1.5.58.68.54.89.88.37.7.48,1.09.21.79.26,1.22.14.86.25,1.28.25.85.43,1.26.45.8.82,1.16h.25l.25-.25c.36-.73.73-1.5,1.1-2.31s.76-1.63,1.16-2.46.83-1.63,1.28-2.42.95-1.51,1.49-2.18c.13-.12.23-.21.3-.27s.13-.11.19-.14.12-.05.19-.05.16,0,.28,0c.36,0,.74.06,1.13.18s.75.28,1.08.49.6.46.82.76.33.62.33.98c0,.96-.16,1.92-.47,2.87s-.69,1.9-1.12,2.85-.89,1.88-1.34,2.8-.84,1.84-1.14,2.74c-.12.36-.24.87-.37,1.51s-.27,1.37-.42,2.18-.32,1.67-.5,2.58-.38,1.82-.6,2.72-.46,1.77-.72,2.59-.55,1.55-.87,2.18-.67,1.13-1.05,1.5-.79.56-1.24.56c-.84,0-1.58-.14-2.21-.42s-1.17-.67-1.62-1.16-.81-1.08-1.09-1.75-.48-1.4-.6-2.19Z" />
+        <path d="M158.89,162.58v-2.5c0-1.07.02-2.15.05-3.25s.11-2.21.21-3.31.25-2.21.44-3.32.43-2.19.74-3.26l.47-.18c.42,0,.9.08,1.43.23s1.05.35,1.54.59.93.51,1.32.8.64.59.76.88v1.95c0,1.11-.08,2.17-.25,3.17s-.4,1.99-.68,2.96-.61,1.95-.99,2.94-.78,2.02-1.2,3.08c-.12.28-.29.48-.51.59s-.45.17-.69.17c-.29,0-.6-.03-.91-.08s-.6-.14-.85-.26-.46-.28-.62-.47-.25-.44-.25-.73ZM161,142.82c.04-.39.11-.78.21-1.18s.41-.91.92-1.55,1.32-.83,2.43-.59,1.83.69,2.15,1.34.53,1.27.6,1.83-.04,1.17-.32,1.83-.63,1.18-1.05,1.56c-.12.09-.29.16-.51.2s-.45.06-.69.06c-2.99.09-4.24-1.08-3.74-3.52Z" />
+        <path d="M175.7,164.12c0-.45.1-.86.3-1.25s.45-.76.76-1.12.63-.72.98-1.06.68-.69.98-1.05.56-.71.76-1.08.3-.75.3-1.15c0-.12-.09-.23-.28-.35s-.43-.23-.72-.34-.61-.21-.95-.3-.66-.17-.96-.24-.56-.12-.77-.16-.35-.05-.4-.05c-.23,0-.42.12-.55.35s-.24.54-.32.92-.13.81-.18,1.3-.09.98-.15,1.49-.14,1.01-.25,1.5-.25.93-.45,1.31-.45.69-.76.92-.71.35-1.19.35c-.6,0-1.1-.09-1.49-.28s-.72-.44-.98-.75-.44-.67-.56-1.09-.21-.86-.25-1.32-.07-.93-.07-1.42v-3.7c0-.7,0-1.4.03-2.1s.04-1.45.07-2.23.07-1.69.13-2.71l.25-.25c.06,0,.14-.01.25-.04s.23-.05.35-.08.24-.06.34-.08.19-.04.25-.04c-.08-.05-.22-.11-.41-.2s-.42-.19-.67-.32-.51-.26-.78-.41-.51-.31-.73-.47-.4-.33-.54-.5-.22-.34-.22-.5c0-.45.16-.87.49-1.27s.75-.79,1.27-1.14,1.11-.68,1.78-.98,1.32-.54,1.98-.75,1.28-.37,1.87-.48,1.09-.18,1.49-.18c.36,0,.83.04,1.4.12s1.17.21,1.81.38,1.28.38,1.92.64,1.23.57,1.75.92.95.76,1.27,1.21.49.96.49,1.52c0,.48-.1.95-.3,1.41s-.42.91-.66,1.35-.46.9-.66,1.35-.3.93-.3,1.41c0,.28.15.52.45.72s.67.39,1.11.56.92.35,1.44.53,1,.38,1.44.6.81.49,1.11.8.45.68.45,1.12c0,.52-.13,1.06-.4,1.63s-.61,1.15-1.04,1.74-.91,1.16-1.44,1.72-1.07,1.1-1.6,1.6-1.04.96-1.53,1.38-.89.76-1.2,1.05c-.29.23-.55.42-.77.54s-.43.22-.62.28-.39.09-.58.11-.41.02-.66.02-.52-.02-.85-.05-.65-.11-.95-.21-.55-.25-.76-.44-.32-.43-.32-.74ZM170.9,148.29s.08.11.25.24.38.27.64.43.54.33.84.51.6.34.89.48.54.27.76.36.38.14.46.14c.16,0,.33-.1.49-.29s.33-.44.49-.75.32-.65.46-1.03.26-.76.37-1.12.19-.72.25-1.05.1-.59.1-.79c0-.13-.05-.2-.15-.22s-.21-.03-.34-.03c-.54,0-1.04.13-1.5.39s-.91.56-1.34.9-.87.69-1.3,1.04-.89.62-1.37.79Z" />
+        <path d="M186.89,156.21v-.25l.25-.23c.96-.06,1.74-.26,2.33-.62s1.05-.82,1.38-1.41.55-1.28.67-2.07.18-1.68.18-2.64v-1.2c-.12-.16-.31-.32-.59-.47s-.58-.3-.91-.45-.68-.31-1.05-.47-.69-.33-.98-.5-.54-.37-.73-.57-.29-.42-.29-.66c0-.25.17-.48.52-.7s.79-.43,1.32-.63,1.12-.39,1.76-.56,1.25-.33,1.84-.46,1.11-.24,1.56-.33.76-.16.91-.19c.12-.05.35-.1.69-.17s.75-.13,1.21-.21.95-.16,1.46-.24,1-.16,1.46-.24.87-.15,1.21-.21.58-.11.69-.15c.06,0,.21-.02.44-.07s.49-.1.76-.17.52-.12.76-.17.38-.07.44-.07h.25c.18,0,.35.04.53.13s.33.21.47.35.24.32.33.53.12.43.12.68c0,.4-.13.74-.4,1.03s-.6.54-1.02.76-.88.41-1.38.58-1,.33-1.48.47-.92.3-1.32.46-.7.34-.9.54c-.12.12-.25.36-.39.72s-.28.79-.43,1.28-.28,1.03-.41,1.6-.25,1.13-.35,1.68-.19,1.05-.25,1.52-.09.84-.09,1.12c.48,0,.95-.09,1.41-.26s.91-.37,1.35-.58.9-.4,1.35-.58.93-.26,1.41-.26c.25,0,.46.08.63.24s.33.35.45.57.21.46.27.71.09.47.09.64c0,.63-.21,1.18-.62,1.65s-.93.87-1.56,1.21-1.29.63-2.02.88-1.4.47-2.02.67-1.14.38-1.56.55-.62.35-.62.55v2.64c0,.12.03.21.08.28s.12.12.19.15.16.05.24.05.15,0,.21,0c.48,0,.94-.08,1.39-.23s.88-.35,1.3-.58.84-.49,1.25-.76.82-.52,1.22-.76.81-.43,1.23-.58.85-.23,1.29-.23c.3,0,.57.08.81.24s.43.36.6.6.29.5.38.78.13.54.13.79v.72c-.42.48-.87.94-1.35,1.37s-1,.81-1.55,1.14-1.14.59-1.78.78-1.31.29-2.04.29c-.52,0-1.07-.06-1.67-.19s-1.2-.31-1.81-.54-1.2-.52-1.78-.85-1.1-.7-1.59-1.11-.91-.85-1.27-1.33-.61-.98-.76-1.49c-.2-.64-.4-1.14-.59-1.49s-.38-.62-.57-.81-.38-.34-.58-.43-.41-.2-.62-.33-.45-.3-.69-.52-.51-.55-.79-.98Z" />
+        <path d="M212.17,164.62c0-.12.18-.27.55-.46s.83-.41,1.38-.67,1.15-.55,1.78-.89,1.23-.7,1.78-1.11,1.01-.85,1.38-1.33.55-1,.55-1.56c-.42,0-.83.03-1.22.08s-.78.11-1.17.17-.78.11-1.18.17-.81.08-1.23.08-.95-.02-1.55-.07-1.22-.13-1.86-.25-1.28-.27-1.9-.47-1.18-.44-1.67-.75-.89-.67-1.2-1.08-.46-.91-.46-1.47.13-1.22.39-1.93.62-1.46,1.07-2.25.99-1.58,1.6-2.39,1.27-1.59,1.98-2.35,1.44-1.47,2.21-2.14,1.52-1.25,2.28-1.75,1.49-.89,2.2-1.18,1.36-.43,1.96-.43c.25,0,.57.03.98.08s.86.13,1.34.25.97.25,1.46.42.94.37,1.34.61.73.5.98.79.38.62.38.98c0,.18-.04.45-.13.83s-.21.82-.36,1.31-.33,1.03-.54,1.6-.43,1.15-.69,1.71-.52,1.12-.79,1.64-.56,1-.84,1.41-.57.74-.86.98-.57.36-.83.36c-.2,0-.46-.03-.77-.08s-.65-.13-1-.23-.71-.22-1.07-.36-.69-.3-.98-.47-.52-.37-.7-.58-.27-.44-.27-.69v-.23l1.44-3.13v-.72c-.36.2-.76.49-1.2.87s-.87.82-1.32,1.32-.88,1.04-1.29,1.62-.79,1.17-1.12,1.76-.59,1.17-.78,1.74-.29,1.09-.29,1.57c0,.13.05.2.14.22s.21.03.33.03c.6,0,1.2-.06,1.79-.18s1.2-.26,1.8-.41,1.2-.29,1.8-.41,1.2-.18,1.79-.18c.28,0,.67.02,1.15.06s1.02.11,1.59.21,1.15.23,1.73.39,1.11.35,1.59.58.87.5,1.17.81.45.67.45,1.06c0,.56-.16,1.14-.49,1.74s-.76,1.18-1.31,1.75-1.16,1.11-1.85,1.62-1.4.96-2.13,1.34-1.44.68-2.14.91-1.34.33-1.9.33c-.08,0-.27,0-.56,0s-.64-.02-1.03-.04-.81-.05-1.24-.11-.83-.12-1.2-.21-.67-.2-.91-.33-.36-.3-.36-.5Z" />
+      </g>
+    </svg>
+  );
+}
+
+// ── NAVBAR ─────────────────────────────────────────────────
+const NAV_LINKS = [
+  { id:"home",     label:"Accueil"   },
+  { id:"messages", label:"Messages"  },
+  { id:"profile",  label:"Profil"    },
+];
+
+function Navbar({ screen, navigate, unread }) {
+  return (
+    <nav style={{
+      position:"fixed", top:0, left:0, right:0, height:64, zIndex:1000,
+      background:"rgba(255,249,236,0.95)", backdropFilter:"blur(12px)",
+      borderBottom:`1px solid #EEE0D4`,
+      display:"flex", alignItems:"center",
+      padding:"0 32px", gap:0
+    }}>
+      {/* Logo */}
+      <button onClick={()=>navigate("home")} style={{
+        background:"none", border:"none", cursor:"pointer",
+        display:"flex", alignItems:"center", padding:0, marginRight:48
+      }}>
+        <Logo height={44} />
+      </button>
+
+      {/* Nav links */}
+      <div style={{ display:"flex", gap:4, flex:1 }}>
+        {NAV_LINKS.map(l => {
+          const active = screen === l.id;
+          return (
+            <button key={l.id} onClick={()=>navigate(l.id)} className="sv-navlink" style={{
+              padding:"8px 18px", borderRadius:50, fontWeight:600, fontSize:14,
+              fontFamily:"'Montserrat', sans-serif",
+              background: active ? "#FDE8EC" : "none",
+              color: active ? "#FB6376" : "#9E7A8A",
+              border:"none", cursor:"pointer",
+              position:"relative"
+            }}>
+              {l.label}
+              {l.id==="messages" && unread>0 && (
+                <span style={{
+                  position:"absolute", top:4, right:6,
+                  background:"#FB6376", borderRadius:50, width:16, height:16,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:9, color:"#fff", fontWeight:700
+                }}>{unread}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Right actions */}
+      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+        <button onClick={()=>navigate("create")} className="sv-btn-primary" style={{
+          background:"#FB6376", color:"#fff", border:"none", borderRadius:12,
+          padding:"9px 20px", fontFamily:"'Montserrat', sans-serif",
+          fontWeight:700, fontSize:14, cursor:"pointer",
+          boxShadow:"0 3px 12px rgba(251,99,118,0.3)"
+        }}>+ Créer</button>
+        <button onClick={()=>navigate("profile")} style={{
+          width:38, height:38, borderRadius:38, background:"#FB6376",
+          border:"none", cursor:"pointer", color:"#fff",
+          fontWeight:700, fontSize:15, fontFamily:"'Montserrat', sans-serif"
+        }}>M</button>
+        <button onClick={()=>navigate("auth")} style={{
+          background:"none", border:`1.5px solid #EEE0D4`, borderRadius:10,
+          padding:"7px 14px", fontSize:13, fontWeight:600, color:"#9E7A8A",
+          cursor:"pointer", fontFamily:"'Montserrat', sans-serif"
+        }}>Connexion</button>
+      </div>
+    </nav>
+  );
+}
+
+// ── APP ────────────────────────────────────────────────────
+function App() {
+  const [screen, setScreen] = useState("home");
+  const [history, setHistory] = useState(["home"]);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [events, setEvents] = useState(EVENTS_DATA);
+  const [tweaks, setTweakState] = useState(TWEAK_DEFAULTS);
+
+  const navigate = (to, data) => {
+    if (to === -1) {
+      const prev = history.slice(0,-1);
+      const last = prev[prev.length-1] || "home";
+      setHistory(prev.length ? prev : ["home"]);
+      setScreen(last);
+      window.scrollTo({top:0});
+      return;
+    }
+    if (to === "detail" && data) setSelectedEvent(data);
+    setHistory(h => [...h, to]);
+    setScreen(to);
+    window.scrollTo({top:0});
+  };
+
+  const toggleJoin = (id) => {
+    setEvents(evs => evs.map(e => e.id===id ? {...e, joined:!e.joined} : e));
+    if (selectedEvent?.id===id) setSelectedEvent(ev => ({...ev, joined:!ev.joined}));
+  };
+
+  const setTweak = (k, v) => {
+    const next = typeof k==="object" ? {...tweaks,...k} : {...tweaks,[k]:v};
+    setTweakState(next);
+    window.parent.postMessage({type:"__edit_mode_set_keys", edits:next}, "*");
+  };
+
+  const unread = CONVOS_DATA.reduce((n,c) => n+c.unread, 0);
+  const showNav = screen !== "auth";
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#FFF9EC" }}>
+      {showNav && <Navbar screen={screen} navigate={navigate} unread={unread} />}
+
+      <main style={{
+        maxWidth: screen==="messages" ? 1200 : 1100,
+        margin:"0 auto",
+        padding: screen==="auth" ? "0"
+          : screen==="messages" ? "80px 32px 0"
+          : "96px 32px 0",
+      }}>
+        {screen==="home"     && <HomeView events={events} navigate={navigate} />}
+        {screen==="messages" && <MessagesView navigate={navigate} />}
+        {screen==="profile"  && <ProfileView events={events} navigate={navigate} />}
+        {screen==="detail"   && selectedEvent && (
+          <EventDetailView ev={selectedEvent} navigate={navigate} onJoin={toggleJoin} />
+        )}
+        {screen==="auth"     && <AuthView navigate={navigate} />}
+        {screen==="create"   && <CreateEventView navigate={navigate} />}
+      </main>
+
+      <TweaksPanel tweaks={tweaks} setTweak={setTweak}>
+        <TweakSection title="Couleurs">
+          <TweakColor label="Accent (corail)" id="coral" tweaks={tweaks} setTweak={setTweak} />
+          <TweakColor label="Texte (violet)" id="purple" tweaks={tweaks} setTweak={setTweak} />
+          <TweakColor label="Fond" id="bg" tweaks={tweaks} setTweak={setTweak} />
+        </TweakSection>
+        <TweakSection title="Navigation rapide">
+          <TweakRadio label="Écran" id="demoScreen"
+            options={[{label:"Accueil",value:"home"},{label:"Messages",value:"messages"},{label:"Profil",value:"profile"}]}
+            tweaks={tweaks} setTweak={(k,v)=>{ setTweak(k,v); setScreen(v); }} />
+        </TweakSection>
+        <TweakSection title="Pages spéciales">
+          <TweakButton label="Auth / Connexion" onClick={()=>setScreen("auth")} />
+          <TweakButton label="Créer un événement" onClick={()=>setScreen("create")} />
+          <TweakButton label="Détail événement" onClick={()=>{ setSelectedEvent(events[0]); setScreen("detail"); }} />
+        </TweakSection>
+      </TweaksPanel>
+    </div>
+  );
+}
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "coral": "#FB6376",
+  "purple": "#5D2A42",
+  "bg": "#FFF9EC",
+  "demoScreen": "home"
+}/*EDITMODE-END*/;
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

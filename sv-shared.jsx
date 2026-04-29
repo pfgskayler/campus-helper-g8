@@ -1,0 +1,210 @@
+// sv-shared.jsx — Design tokens, data, shared UI components (v3 – Design System)
+
+// ── TOKENS ─────────────────────────────────────────────────
+const T = {
+  bg:     '#FFF9EC',
+  purple: '#5D2A42',
+  coral:  '#FB6376',
+  coralD: '#E84D62',
+  text:   '#5D2A42',
+  sec:    '#9E7A8A',
+  card:   '#FFFFFF',
+  border: '#EEE0D4',
+  lilac:  '#FDE8EC',
+  muted:  '#FEF5E7',
+};
+
+// Font stacks
+const F = {
+  title:  "'Rammetto One', cursive",
+  body:   "'Montserrat', sans-serif",
+};
+
+// ── DATA (BORDEAUX) ────────────────────────────────────────
+const EVENTS_DATA = [
+  { id:1, title:"Session révisions Droit", date:"Mer 30 Avr", time:"14h–17h", loc:"BU Bordeaux Montaigne", address:"Domaine universitaire, Pessac", cat:"Révisions", img:"https://picsum.photos/seed/sv1/800/420", joined:false, host:"Emma Laurent", hostInit:"EL", hostColor:"#FB6376", desc:"On se retrouve à la BU pour réviser le droit constitutionnel ensemble. Niveau L2. Apporte tes fiches, on partage nos résumés et on s'entraide sur les points difficiles. Café offert ☕" },
+  { id:2, title:"Coworking Darwin Bordeaux", date:"Jeu 1 Mai", time:"10h–13h", loc:"Darwin Écosystème", address:"87 quai des Queyries, Bordeaux", cat:"Coworking", img:"https://picsum.photos/seed/sv2/800/420", joined:true, host:"Lucas Martin", hostInit:"LM", hostColor:"#5D2A42", desc:"Session de travail libre dans le cadre incroyable de Darwin, au bord de la Garonne. Chacun bosse sur ses projets dans une bonne ambiance estudiantine. Idéal pour changer d'air." },
+  { id:3, title:"Sortie surf Médoc", date:"Sam 3 Mai", time:"9h–13h", loc:"Plage du Porge", address:"Le Porge, Médoc (33)", cat:"Sport", img:"https://picsum.photos/seed/sv3/800/420", joined:false, host:"Tom Ravel", hostInit:"TR", hostColor:"#059669", desc:"Cours de surf collectif pour étudiants ! Moniteur certifié, matériel inclus. 20€ par personne. Covoiturage organisé depuis le campus. Inscription avant vendredi midi." },
+  { id:4, title:"Jam session guitare", date:"Ven 2 Mai", time:"19h–22h", loc:"Rock School Barbey", address:"18 cours Barbey, Bordeaux", cat:"Musique", img:"https://picsum.photos/seed/sv4/800/420", joined:false, host:"Sofia Diaz", hostInit:"SD", hostColor:"#8B5CF6", desc:"Jam ouverte à tous niveaux dans une salle mythique de Bordeaux. Guitares, basse, claviers bienvenus. Ambiance décontractée, bonne musique. Amenez vos instruments ou pas — on a du matos." },
+  { id:5, title:"Révisions maths L2", date:"Mar 29 Avr", time:"9h–12h", loc:"Campus Victoire", address:"3 place de la Victoire, Bordeaux", cat:"Révisions", img:"https://picsum.photos/seed/sv5/800/420", joined:true, host:"Paul Nguyen", hostInit:"PN", hostColor:"#F59E0B", desc:"Révisions intensives pour le partiel de maths. Séries de Taylor, intégrales multiples et probabilités au programme. Niveau requis : avoir suivi le cours de M. Leroy. Places limitées à 8." },
+  { id:6, title:"Apéro étudiant Darwin", date:"Ven 2 Mai", time:"18h30–21h", loc:"Darwin Écosystème", address:"87 quai des Queyries, Bordeaux", cat:"Sortie", img:"https://picsum.photos/seed/sv6/800/420", joined:false, host:"Camille Roy", hostInit:"CR", hostColor:"#FB6376", desc:"Soirée décompression de fin de semaine au bord de la Garonne. Entrée libre, ambiance chill, happy hour jusqu'à 20h. Le cadre de Darwin est parfait pour se retrouver entre étudiants." },
+];
+
+const CONVOS_DATA = [
+  { id:1, name:"Emma Laurent",      init:"EL", preview:"T'es dispo demain pour réviser ?", time:"14:32", unread:2, color:"#FB6376", msgs:[
+    {me:false, txt:"Salut ! T'as vu la session révisions de demain à la BU Montaigne ?"},
+    {me:true,  txt:"Oui ! Je pensais y aller, t'es dispo ?"},
+    {me:false, txt:"Carrément 🎉 On peut covoiturer depuis Victoire si tu veux"},
+    {me:true,  txt:"Super idée ! On se retrouve à 13h30 ?"},
+    {me:false, txt:"T'es dispo demain pour réviser ?"},
+  ]},
+  { id:2, name:"Session Droit S4",  init:"SD", preview:"Lucas : J'apporte les fiches !", time:"12:01", unread:5, color:"#8B5CF6", msgs:[
+    {me:false, txt:"Lucas : J'apporte les fiches de révision !"},
+    {me:false, txt:"Emma : Super, moi j'apporte les annales 📚"},
+    {me:true,  txt:"Parfait, à demain tout le monde ! RDV BU Montaigne"},
+  ]},
+  { id:3, name:"Tom Ravel",         init:"TR", preview:"Super session hier 🙌",           time:"Hier",  unread:0, color:"#5D2A42", msgs:[
+    {me:false, txt:"Super session hier 🙌 La vague était parfaite"},
+    {me:true,  txt:"Totalement ! On remet ça le mois prochain ?"},
+    {me:false, txt:"Avec plaisir, je check les marées 🏄"},
+  ]},
+  { id:4, name:"Coworking Darwin",  init:"CD", preview:"Sofia : On commence à 10h ?",    time:"Lun",   unread:0, color:"#FB6376", msgs:[
+    {me:false, txt:"Sofia : On commence à 10h côté terrasse ?"},
+    {me:true,  txt:"Oui pour moi c'est parfait !"},
+  ]},
+];
+
+const CATS = ["Tous","Révisions","Coworking","Sport","Musique","Sortie","Art"];
+
+// ── SHARED COMPONENTS ──────────────────────────────────────
+
+function Avatar({ init, color, size = 40 }) {
+  return (
+    <div style={{
+      width:size, height:size, borderRadius:size,
+      background: color || T.coral,
+      display:"flex", alignItems:"center", justifyContent:"center",
+      color:"#fff", fontWeight:700, fontSize:size*0.36,
+      fontFamily:F.body, flexShrink:0
+    }}>{init}</div>
+  );
+}
+
+function Badge({ children, color }) {
+  return (
+    <span style={{
+      background: color ? color+'20' : T.lilac,
+      color: color || T.coral,
+      borderRadius:50, padding:"4px 12px",
+      fontSize:12, fontWeight:700, fontFamily:F.body,
+      display:"inline-block"
+    }}>{children}</span>
+  );
+}
+
+function Btn({ children, onClick, variant="primary", style:sx={} }) {
+  const base = {
+    borderRadius:12, padding:"11px 24px",
+    fontWeight:700, fontSize:14,
+    cursor:"pointer", border:"none",
+    fontFamily:F.body,
+    transition:"all 0.18s",
+    letterSpacing:"0.01em",
+    ...sx
+  };
+  const variants = {
+    primary: { background:T.coral, color:"#fff", boxShadow:"0 4px 16px rgba(251,99,118,0.3)" },
+    secondary: { background:T.lilac, color:T.coral },
+    ghost: { background:"transparent", color:T.text, border:`1.5px solid ${T.border}` },
+    purple: { background:T.purple, color:"#fff", boxShadow:"0 4px 16px rgba(93,42,66,0.25)" },
+  };
+  return <button onClick={onClick} style={{...base, ...variants[variant]}}>{children}</button>;
+}
+
+function Input({ label, type="text", placeholder, value, onChange, textarea, required }) {
+  const s = {
+    width:"100%", background:T.muted,
+    border:`1.5px solid ${T.border}`,
+    borderRadius:12, padding:"12px 16px",
+    fontSize:14, fontWeight:500,
+    color:T.text, fontFamily:F.body, outline:"none",
+    transition:"border 0.2s",
+    resize: textarea ? "vertical" : undefined,
+    minHeight: textarea ? 100 : undefined
+  };
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+      {label && (
+        <label style={{ fontSize:13, fontWeight:600, color:T.text, fontFamily:F.body }}>
+          {label}{required && <span style={{color:T.coral}}> *</span>}
+        </label>
+      )}
+      {textarea
+        ? <textarea placeholder={placeholder} value={value} onChange={onChange} style={s} rows={4} />
+        : <input type={type} placeholder={placeholder} value={value} onChange={onChange} style={s} />
+      }
+    </div>
+  );
+}
+
+function SectionTitle({ children, action, onAction }) {
+  return (
+    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24 }}>
+      <h2 style={{ fontSize:20, fontWeight:400, color:T.text, margin:0, fontFamily:F.title }}>{children}</h2>
+      {action && (
+        <button onClick={onAction} style={{
+          fontSize:13, color:T.coral, fontWeight:600,
+          background:"none", border:"none", cursor:"pointer", fontFamily:F.body
+        }}>{action} →</button>
+      )}
+    </div>
+  );
+}
+
+function ParticipantDots({ count }) {
+  const colors = [T.coral, T.purple, "#059669", "#8B5CF6", "#F59E0B"];
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+      <div style={{ display:"flex" }}>
+        {Array.from({length:Math.min(count,4)}).map((_,i)=>(
+          <div key={i} style={{
+            width:24, height:24, borderRadius:24, border:"2px solid #fff",
+            background:colors[i%colors.length], marginLeft:i>0?-8:0,
+            display:"flex", alignItems:"center", justifyContent:"center",
+            fontSize:8, color:"#fff", fontWeight:700, fontFamily:F.body
+          }}>{String.fromCharCode(65+i)}</div>
+        ))}
+      </div>
+      <span style={{ fontSize:13, color:T.sec, fontWeight:500, fontFamily:F.body }}>
+        {count} participant{count>1?"s":""}
+      </span>
+    </div>
+  );
+}
+
+const PCOUNT = [8,5,12,6,4,9];
+
+function EventCard({ ev, idx=0, onClick }) {
+  const parts = PCOUNT[idx % PCOUNT.length];
+  return (
+    <div onClick={() => onClick && onClick(ev)}
+      className="sv-card"
+      style={{
+        background:T.card, borderRadius:20, overflow:"hidden",
+        boxShadow:"0 2px 12px rgba(93,42,66,0.08)",
+        cursor:"pointer", transition:"transform 0.2s, box-shadow 0.2s",
+        display:"flex", flexDirection:"column",
+        border:`1px solid ${T.border}`
+      }}
+      onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 10px 28px rgba(93,42,66,0.14)";}}
+      onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="0 2px 12px rgba(93,42,66,0.08)";}}>
+      <div className="sv-card-img-wrap" style={{ position:"relative", paddingTop:"56%" }}>
+        <img src={ev.img} alt={ev.title}
+          style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+        <div style={{ position:"absolute", top:12, left:12 }}>
+          <Badge>{ev.cat}</Badge>
+        </div>
+      </div>
+      <div style={{ padding:"16px", flex:1, display:"flex", flexDirection:"column", gap:8 }}>
+        <div style={{ fontWeight:600, fontSize:15, color:T.text, lineHeight:1.35, fontFamily:F.body }}>{ev.title}</div>
+        <div style={{ fontSize:13, color:T.sec, fontFamily:F.body, fontWeight:500 }}>{ev.date} · {ev.time}</div>
+        <div style={{ fontSize:13, color:T.sec, fontFamily:F.body, fontWeight:500 }}>📍 {ev.loc}</div>
+        <div style={{ marginTop:"auto", paddingTop:12, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <ParticipantDots count={parts} />
+          <span style={{
+            background:ev.joined ? T.lilac : T.coral,
+            color:ev.joined ? T.coral : "#fff",
+            borderRadius:50, padding:"6px 16px",
+            fontSize:13, fontWeight:700, fontFamily:F.body,
+            boxShadow: ev.joined ? "none" : "0 3px 10px rgba(251,99,118,0.3)"
+          }}>{ev.joined ? "✓ Rejoint" : "Rejoindre"}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, {
+  T, F, EVENTS_DATA, CONVOS_DATA, CATS,
+  Avatar, Badge, Btn, Input, SectionTitle, ParticipantDots, PCOUNT, EventCard
+});
