@@ -37,20 +37,49 @@ const CONVOS_DATA = [
     {me:false, txt:"Carrément 🎉 On peut covoiturer depuis Victoire si tu veux"},
     {me:true,  txt:"Super idée ! On se retrouve à 13h30 ?"},
     {me:false, txt:"T'es dispo demain pour réviser ?"},
+  ], replies:[
+    "Oui avec plaisir ! 😊",
+    "Trop bien, j'ai justement besoin d'aide sur le cours de compta",
+    "On se retrouve à la BU alors ?",
+    "Parfait ! À tout à l'heure 👋",
+    "Super ! T'as des fiches sur ce chapitre ?",
+    "Carrément, je suis dispo cet aprem aussi si tu veux",
+    "Haha oui c'était trop bien 🎉",
   ]},
   { id:2, name:"Session Droit S4",  init:"SD", preview:"Lucas : J'apporte les fiches !", time:"12:01", unread:5, color:"#8B5CF6", msgs:[
     {me:false, txt:"Lucas : J'apporte les fiches de révision !"},
     {me:false, txt:"Emma : Super, moi j'apporte les annales 📚"},
     {me:true,  txt:"Parfait, à demain tout le monde ! RDV BU Montaigne"},
+  ], replies:[
+    "Lucas : OK je note 👍",
+    "Emma : Bonne idée !",
+    "Lucas : On commence à quelle heure ?",
+    "Sofiane : Je serai là aussi, j'apporte du café ☕",
+    "Emma : Top, à demain tout le monde 🙌",
+    "Lucas : N'oubliez pas les annales de l'an dernier !",
   ]},
   { id:3, name:"Tom Ravel",         init:"TR", preview:"Super session hier 🙌",           time:"Hier",  unread:0, color:"#5D2A42", msgs:[
     {me:false, txt:"Super session hier 🙌 La vague était parfaite"},
     {me:true,  txt:"Totalement ! On remet ça le mois prochain ?"},
     {me:false, txt:"Avec plaisir, je check les marées 🏄"},
+  ], replies:[
+    "Carrément ! La météo a l'air bonne la semaine prochaine 🌊",
+    "Je regarde les spots ce soir et je te dis",
+    "Trop bien, j'invite Nico aussi si t'es ok ?",
+    "Ouais ! On prend les planches le matin ?",
+    "Haha ouais trop hâte 🤙",
+    "Je check Windguru et je t'envoie les créneaux",
   ]},
   { id:4, name:"Coworking Darwin",  init:"CD", preview:"Sofia : On commence à 10h ?",    time:"Lun",   unread:0, color:"#FB6376", msgs:[
     {me:false, txt:"Sofia : On commence à 10h côté terrasse ?"},
     {me:true,  txt:"Oui pour moi c'est parfait !"},
+  ], replies:[
+    "Sofia : Super, je réserve la table 👌",
+    "Sofia : T'as besoin du mot de passe wifi ? C'est darwin2024",
+    "Léo : Je serai là vers 10h15, gardez-moi une place",
+    "Sofia : On commande des croissants ? 🥐",
+    "Léo : Bonne idée, je prends aussi un allongé",
+    "Sofia : À toute à l'heure alors 😊",
   ]},
 ];
 

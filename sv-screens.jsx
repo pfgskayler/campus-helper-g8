@@ -355,14 +355,32 @@ function MessagesView() {
   const [active, setActive] = React.useState(0);
   const [draft, setDraft] = React.useState("");
   const [convos, setConvos] = React.useState(CONVOS_DATA.map(c => ({...c, msgs:[...c.msgs]})));
+  const [typing, setTyping] = React.useState(false);
+  const bottomRef = React.useRef(null);
   const convo = convos[active];
+
+  React.useEffect(() => {
+    if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior:"smooth" });
+  }, [convos, typing]);
 
   const send = () => {
     if (!draft.trim()) return;
+    const msgText = draft;
     setConvos(prev => prev.map((c,i) => i===active
-      ? {...c, msgs:[...c.msgs, {me:true, txt:draft}], preview:draft, unread:0}
+      ? {...c, msgs:[...c.msgs, {me:true, txt:msgText}], preview:msgText, unread:0}
       : c));
     setDraft("");
+
+    const replies = convo.replies || ["D'accord 👍", "Super !", "OK je vois !", "Haha 😄", "Bonne idée !"];
+    const reply = replies[Math.floor(Math.random() * replies.length)];
+    const delay = 900 + Math.random() * 900;
+    setTyping(true);
+    setTimeout(() => {
+      setTyping(false);
+      setConvos(prev => prev.map((c,i) => i===active
+        ? {...c, msgs:[...c.msgs, {me:false, txt:reply}], preview:reply, time:"maintenant"}
+        : c));
+    }, delay);
   };
 
   return (
@@ -438,6 +456,23 @@ function MessagesView() {
               }}>{m.txt}</div>
             </div>
           ))}
+          {typing && (
+            <div style={{ display:"flex", justifyContent:"flex-start", alignItems:"flex-end", gap:8 }}>
+              <Avatar init={convo.init} color={convo.color} size={28} />
+              <div style={{
+                background:T.muted, borderRadius:"18px 18px 18px 4px",
+                padding:"12px 18px", display:"flex", gap:5, alignItems:"center"
+              }}>
+                {[0,1,2].map(j => (
+                  <div key={j} style={{
+                    width:7, height:7, borderRadius:"50%", background:T.sec,
+                    animation:"sv-bounce 1.2s infinite", animationDelay:`${j*0.2}s`
+                  }} />
+                ))}
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} />
         </div>
 
         <div style={{ padding:"16px 24px", borderTop:`1px solid ${T.border}`,
