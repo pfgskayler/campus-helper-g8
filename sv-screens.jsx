@@ -627,17 +627,9 @@ function MessagesView({ convos, setConvos }) {
 }
 
 // ── PROFILE VIEW ───────────────────────────────────────────
-function ProfileView({ events, navigate, onLike }) {
+function ProfileView({ events, navigate, onLike, profile, setProfile }) {
   const [showAllUpcoming, setShowAllUpcoming] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
-
-  const loadProfile = () => {
-    try { return JSON.parse(localStorage.getItem("sv_profile")) || null; } catch(e) { return null; }
-  };
-  const [profile, setProfile] = React.useState(() => loadProfile() || {
-    name: "Marie Dupont", handle: "marie.dupont", study: "Droit", city: "Bordeaux",
-    bio: "Étudiante en droit à Bordeaux 🎓 · Passionnée de musique, surf et coworking au bord de la Garonne ☕"
-  });
   const [draft, setDraft] = React.useState(profile);
 
   const saveProfile = () => {
@@ -645,6 +637,7 @@ function ProfileView({ events, navigate, onLike }) {
     setProfile(draft);
     setEditing(false);
   };
+
 
   const joinedAll = events.filter(e => e.joined && !e.past);
   const upcoming = showAllUpcoming ? joinedAll : joinedAll.slice(0,3);

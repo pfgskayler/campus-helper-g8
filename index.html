@@ -121,7 +121,8 @@ const NAV_LINKS = [
   { id:"profile",  label:"Profil"    },
 ];
 
-function Navbar({ screen, navigate, unread }) {
+function Navbar({ screen, navigate, unread, profile }) {
+  const initials = profile ? profile.name.split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase() : "M";
   return (
     <nav style={{
       position:"fixed", top:0, left:0, right:0, height:64, zIndex:1000,
@@ -177,7 +178,7 @@ function Navbar({ screen, navigate, unread }) {
           width:38, height:38, borderRadius:38, background:"#FB6376",
           border:"none", cursor:"pointer", color:"#fff",
           fontWeight:700, fontSize:15, fontFamily:"'Montserrat', sans-serif"
-        }}>M</button>
+        }}>{initials}</button>
         <button onClick={()=>navigate("auth")} style={{
           background:"none", border:`1.5px solid #EEE0D4`, borderRadius:10,
           padding:"7px 14px", fontSize:13, fontWeight:600, color:"#9E7A8A",
@@ -201,6 +202,12 @@ function App() {
       if (saved) return JSON.parse(saved);
     } catch(e) {}
     return CONVOS_DATA.map(c => ({...c, msgs:[...c.msgs]}));
+  });
+  const [profile, setProfile] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("sv_profile")) || null; } catch(e) { return null; }
+  } || {
+    name:"Marie Dupont", handle:"marie.dupont", study:"Droit", city:"Bordeaux",
+    bio:"Étudiante en droit à Bordeaux 🎓 · Passionnée de musique, surf et coworking au bord de la Garonne ☕"
   });
 
   const navigate = (to, data) => {
@@ -239,7 +246,7 @@ function App() {
 
   return (
     <div style={{ minHeight:"100vh", background:"#FFF9EC" }}>
-      {showNav && <Navbar screen={screen} navigate={navigate} unread={unread} />}
+      {showNav && <Navbar screen={screen} navigate={navigate} unread={unread} profile={profile} />}
 
       <main style={{
         maxWidth: screen==="messages" ? 1200 : 1100,
@@ -250,7 +257,7 @@ function App() {
       }}>
         {screen==="home"     && <HomeView events={events} navigate={navigate} onLike={toggleLike} />}
         {screen==="messages" && <MessagesView navigate={navigate} convos={convos} setConvos={setConvos} />}
-        {screen==="profile"  && <ProfileView events={events} navigate={navigate} onLike={toggleLike} />}
+        {screen==="profile"  && <ProfileView events={events} navigate={navigate} onLike={toggleLike} profile={profile} setProfile={setProfile} />}
         {screen==="detail"   && selectedEvent && (
           <EventDetailView ev={selectedEvent} navigate={navigate} onJoin={toggleJoin} onLike={toggleLike} />
         )}
