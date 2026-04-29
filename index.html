@@ -204,10 +204,12 @@ function App() {
     return CONVOS_DATA.map(c => ({...c, msgs:[...c.msgs]}));
   });
   const [profile, setProfile] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("sv_profile")) || null; } catch(e) { return null; }
-  } || {
-    name:"Marie Dupont", handle:"marie.dupont", study:"Droit", city:"Bordeaux",
-    bio:"Étudiante en droit à Bordeaux 🎓 · Passionnée de musique, surf et coworking au bord de la Garonne ☕"
+    try {
+      const saved = JSON.parse(localStorage.getItem("sv_profile"));
+      if (saved) return saved;
+    } catch(e) {}
+    return { name:"Marie Dupont", handle:"marie.dupont", study:"Droit", city:"Bordeaux",
+      bio:"Étudiante en droit à Bordeaux 🎓 · Passionnée de musique, surf et coworking au bord de la Garonne ☕" };
   });
 
   const navigate = (to, data) => {
