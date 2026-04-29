@@ -167,13 +167,14 @@ function Input({ label, type="text", placeholder, value, onChange, textarea, req
 
 function SectionTitle({ children, action, onAction }) {
   return (
-    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24 }}>
+    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:24 }}>
       <h2 style={{ fontSize:20, fontWeight:400, color:T.text, margin:0, fontFamily:F.title }}>{children}</h2>
       {action && (
-        <button onClick={onAction} style={{
-          fontSize:13, color:T.coral, fontWeight:600,
-          background:"none", border:"none", cursor:"pointer", fontFamily:F.body
-        }}>{action} →</button>
+        <button onClick={onAction} className="sv-section-action" style={{
+          fontSize:13, color:T.coral, fontWeight:600, letterSpacing:"0.01em",
+          background:"none", border:"none", cursor:"pointer", fontFamily:F.body,
+          textDecoration:"underline", textDecorationColor:"transparent", padding:0
+        }}>{action}</button>
       )}
     </div>
   );
@@ -186,14 +187,15 @@ function ParticipantDots({ count }) {
       <div style={{ display:"flex" }}>
         {Array.from({length:Math.min(count,4)}).map((_,i)=>(
           <div key={i} style={{
-            width:24, height:24, borderRadius:24, border:"2px solid #fff",
-            background:colors[i%colors.length], marginLeft:i>0?-8:0,
-            display:"flex", alignItems:"center", justifyContent:"center",
-            fontSize:8, color:"#fff", fontWeight:700, fontFamily:F.body
-          }}>{String.fromCharCode(65+i)}</div>
+            width:22, height:22, borderRadius:22,
+            border:`2px solid ${T.card}`,
+            background:colors[i%colors.length],
+            marginLeft:i>0?-7:0,
+            flexShrink:0
+          }} />
         ))}
       </div>
-      <span style={{ fontSize:13, color:T.sec, fontWeight:500, fontFamily:F.body }}>
+      <span style={{ fontSize:12, color:T.sec, fontWeight:600, fontFamily:F.body, letterSpacing:"0.01em" }}>
         {count} participant{count>1?"s":""}
       </span>
     </div>
@@ -209,15 +211,13 @@ function EventCard({ ev, idx=0, onClick, onLike }) {
       className="sv-card"
       style={{
         background:T.card, borderRadius:20, overflow:"hidden",
-        boxShadow:"0 2px 12px rgba(93,42,66,0.08)",
-        cursor:"pointer", transition:"transform 0.2s, box-shadow 0.2s",
+        boxShadow:"0 2px 10px rgba(93,42,66,0.07)",
+        cursor:"pointer",
         display:"flex", flexDirection:"column",
         border:`1px solid ${T.border}`
-      }}
-      onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 10px 28px rgba(93,42,66,0.14)";}}
-      onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="0 2px 12px rgba(93,42,66,0.08)";}}>
+      }}>
       <div className="sv-card-img-wrap" style={{ position:"relative", paddingTop:"56%" }}>
-        <img src={ev.img} alt={ev.title}
+        <img src={ev.img} alt={ev.title} className="sv-card-img"
           style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
         <div style={{ position:"absolute", top:12, left:12 }}>
           <Badge>{ev.cat}</Badge>
@@ -227,34 +227,79 @@ function EventCard({ ev, idx=0, onClick, onLike }) {
             aria-label={ev.liked ? "Retirer des favoris" : "Ajouter aux favoris"}
             style={{
               position:"absolute", top:12, right:12,
-              width:36, height:36, borderRadius:36,
-              background: ev.liked ? T.coral : "rgba(255,255,255,0.92)",
+              width:34, height:34, borderRadius:34,
+              background: ev.liked ? T.coral : "rgba(255,255,255,0.9)",
               border:"none", cursor:"pointer",
               display:"flex", alignItems:"center", justifyContent:"center",
-              fontSize:18, lineHeight:1,
+              fontSize:16, lineHeight:1,
               color: ev.liked ? "#fff" : T.coral,
-              boxShadow:"0 2px 8px rgba(0,0,0,0.18)",
-              transition:"transform 0.15s, background 0.15s, color 0.15s"
+              boxShadow:"0 2px 8px rgba(0,0,0,0.14)",
+              transition:"transform 0.18s cubic-bezier(0.16,1,0.3,1), background 0.15s"
             }}
-            onMouseEnter={e=>e.currentTarget.style.transform="scale(1.1)"}
+            onMouseEnter={e=>e.currentTarget.style.transform="scale(1.12)"}
             onMouseLeave={e=>e.currentTarget.style.transform=""}>
             {ev.liked ? "♥" : "♡"}
           </button>
         )}
       </div>
-      <div style={{ padding:"16px", flex:1, display:"flex", flexDirection:"column", gap:8 }}>
-        <div style={{ fontWeight:600, fontSize:15, color:T.text, lineHeight:1.35, fontFamily:F.body }}>{ev.title}</div>
-        <div style={{ fontSize:13, color:T.sec, fontFamily:F.body, fontWeight:500 }}>{ev.date} · {ev.time}</div>
-        <div style={{ fontSize:13, color:T.sec, fontFamily:F.body, fontWeight:500 }}>📍 {ev.loc}</div>
-        <div style={{ marginTop:"auto", paddingTop:12, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <div style={{ padding:"16px 18px 18px", flex:1, display:"flex", flexDirection:"column", gap:6 }}>
+        <div style={{ fontWeight:700, fontSize:15, color:T.text, lineHeight:1.3, fontFamily:F.body }}>{ev.title}</div>
+        <div style={{ fontSize:12, color:T.sec, fontFamily:F.body, fontWeight:600, letterSpacing:"0.01em" }}>{ev.date} · {ev.time}</div>
+        <div style={{ fontSize:12, color:T.sec, fontFamily:F.body, fontWeight:500, marginBottom:2 }}>{ev.loc}</div>
+        <div style={{ marginTop:"auto", paddingTop:12, borderTop:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <ParticipantDots count={parts} />
           <span style={{
             background:ev.joined ? T.lilac : T.coral,
             color:ev.joined ? T.coral : "#fff",
-            borderRadius:50, padding:"6px 16px",
-            fontSize:13, fontWeight:700, fontFamily:F.body,
-            boxShadow: ev.joined ? "none" : "0 3px 10px rgba(251,99,118,0.3)"
+            borderRadius:50, padding:"5px 14px",
+            fontSize:12, fontWeight:700, fontFamily:F.body, letterSpacing:"0.01em",
+            boxShadow: ev.joined ? "none" : "0 3px 10px rgba(251,99,118,0.28)"
           }}>{ev.joined ? "✓ Rejoint" : "Rejoindre"}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EventCardHorizontal({ ev, idx=0, onClick, onLike }) {
+  const parts = PCOUNT[idx % PCOUNT.length];
+  return (
+    <div onClick={() => onClick && onClick(ev)}
+      className="sv-card-h"
+      style={{
+        background:T.card, borderRadius:16, overflow:"hidden",
+        boxShadow:"0 2px 10px rgba(93,42,66,0.07)",
+        cursor:"pointer", display:"flex",
+        border:`1px solid ${T.border}`, height:120
+      }}>
+      <div style={{ width:140, flexShrink:0, position:"relative", overflow:"hidden" }}>
+        <img src={ev.img} alt={ev.title} className="sv-card-img"
+          style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+        <div style={{ position:"absolute", top:8, left:8 }}>
+          <Badge>{ev.cat}</Badge>
+        </div>
+      </div>
+      <div style={{ flex:1, padding:"14px 18px", display:"flex", flexDirection:"column", justifyContent:"space-between", minWidth:0 }}>
+        <div>
+          <div style={{ fontWeight:700, fontSize:14, color:T.text, fontFamily:F.body, lineHeight:1.3,
+            overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical",
+            marginBottom:5 }}>{ev.title}</div>
+          <div style={{ fontSize:12, color:T.sec, fontFamily:F.body, fontWeight:600 }}>{ev.date} · {ev.loc}</div>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <ParticipantDots count={parts} />
+          {onLike && (
+            <button onClick={e => { e.stopPropagation(); onLike(ev.id); }}
+              aria-label={ev.liked ? "Retirer des favoris" : "Ajouter aux favoris"}
+              style={{ background:"none", border:"none", cursor:"pointer",
+                fontSize:16, color: ev.liked ? T.coral : T.sec,
+                transition:"color 0.15s, transform 0.18s cubic-bezier(0.16,1,0.3,1)",
+                padding:"4px" }}
+              onMouseEnter={e=>e.currentTarget.style.transform="scale(1.2)"}
+              onMouseLeave={e=>e.currentTarget.style.transform=""}>
+              {ev.liked ? "♥" : "♡"}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -263,5 +308,5 @@ function EventCard({ ev, idx=0, onClick, onLike }) {
 
 Object.assign(window, {
   T, F, EVENTS_DATA, CONVOS_DATA, CATS,
-  Avatar, Badge, Btn, Input, SectionTitle, ParticipantDots, PCOUNT, EventCard
+  Avatar, Badge, Btn, Input, SectionTitle, ParticipantDots, PCOUNT, EventCard, EventCardHorizontal
 });

@@ -127,10 +127,9 @@ function HomeView({ events, navigate, onLike, profile }) {
               ))}
             </div>
           ) : (
-            <div style={{ textAlign:"center", padding:"80px 0", color:T.sec }}>
-              <div style={{ fontSize:48, marginBottom:12 }}>🔭</div>
-              <p style={{ fontWeight:600, fontSize:16, fontFamily:F.body, margin:0 }}>Aucun résultat</p>
-              <p style={{ fontSize:14, fontFamily:F.body, marginTop:8, color:T.sec }}>
+            <div style={{ textAlign:"center", padding:"72px 0", color:T.sec }}>
+              <p style={{ fontWeight:700, fontSize:15, fontFamily:F.body, margin:"0 0 8px", color:T.text }}>Aucun résultat</p>
+              <p style={{ fontSize:14, fontFamily:F.body, margin:0 }}>
                 Essaie une autre catégorie ou un autre mot-clé
               </p>
             </div>
@@ -147,9 +146,9 @@ function HomeView({ events, navigate, onLike, profile }) {
           </div>
 
           <SectionTitle action={showAllSugg ? "Réduire" : "Voir tout"} onAction={() => setShowAllSugg(v => !v)}>Suggestions pour toi</SectionTitle>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:20 }}>
-            {(showAllSugg ? events : events.slice(0,4)).map((ev,i) => (
-              <EventCard key={ev.id} ev={ev} idx={i+3} onClick={ev => navigate("detail", ev)} onLike={onLike} />
+          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            {(showAllSugg ? events : events.slice(0,5)).map((ev,i) => (
+              <EventCardHorizontal key={ev.id} ev={ev} idx={i+3} onClick={ev => navigate("detail", ev)} onLike={onLike} />
             ))}
           </div>
         </>
@@ -213,9 +212,9 @@ function SearchView({ events, navigate, onLike }) {
           <EventCard key={ev.id} ev={ev} idx={i} onClick={ev => navigate("detail", ev)} onLike={onLike} />
         ))}
         {results.length===0 && (
-          <div style={{ gridColumn:"1/-1", textAlign:"center", padding:"80px 0", color:T.sec }}>
-            <div style={{ fontSize:48, marginBottom:12 }}>🔭</div>
-            <p style={{ fontWeight:600, fontSize:16, fontFamily:F.body }}>Aucun résultat trouvé</p>
+          <div style={{ gridColumn:"1/-1", textAlign:"center", padding:"72px 0", color:T.sec }}>
+            <p style={{ fontWeight:700, fontSize:15, fontFamily:F.body, margin:"0 0 6px", color:T.text }}>Aucun résultat trouvé</p>
+            <p style={{ fontSize:14, fontFamily:F.body, margin:0 }}>Essaie un autre mot-clé</p>
           </div>
         )}
       </div>
@@ -378,14 +377,14 @@ function EventDetailView({ ev, navigate, onJoin, onLike }) {
             {ev.title}
           </h1>
 
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:32 }}>
-            {infoItems.map(({icon,label,val}) => (
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:32 }}>
+            {infoItems.map(({label,val}) => (
               <div key={label} style={{
-                background:T.muted, borderRadius:14, padding:"16px",
+                background:T.muted, borderRadius:14, padding:"14px 16px",
                 border:`1px solid ${T.border}`
               }}>
-                <p style={{ fontSize:12, color:T.sec, fontWeight:600, fontFamily:F.body, marginBottom:4 }}>{label}</p>
-                <p style={{ fontSize:14, fontWeight:600, color:T.text, fontFamily:F.body, margin:0 }}>{val}</p>
+                <p style={{ fontSize:11, color:T.sec, fontWeight:600, fontFamily:F.body, marginBottom:4, textTransform:"uppercase", letterSpacing:"0.05em" }}>{label}</p>
+                <p style={{ fontSize:13, fontWeight:600, color:T.text, fontFamily:F.body, margin:0, lineHeight:1.4 }}>{val}</p>
               </div>
             ))}
           </div>
@@ -772,11 +771,12 @@ function ProfileView({ events, navigate, onLike, profile, setProfile }) {
           ))}
         </div>
       ) : (
-        <div style={{ textAlign:"center", padding:"40px", color:T.sec,
-          background:T.card, borderRadius:16, marginBottom:48, border:`1px solid ${T.border}` }}>
-          <div style={{fontSize:36,marginBottom:8}}>♡</div>
-          <p style={{fontWeight:600, fontFamily:F.body, margin:0}}>
-            Aucun favori — clique sur le ♡ d'une activité pour la sauvegarder
+        <div style={{ padding:"28px 32px", color:T.sec,
+          background:T.card, borderRadius:16, marginBottom:48, border:`1px solid ${T.border}`,
+          display:"flex", alignItems:"center", gap:16 }}>
+          <span style={{ fontSize:22, color:T.border, flexShrink:0 }}>♡</span>
+          <p style={{ fontWeight:500, fontFamily:F.body, margin:0, fontSize:14 }}>
+            Aucun favori pour l'instant. Clique sur le ♡ d'une activité pour la retrouver ici.
           </p>
         </div>
       )}
@@ -790,10 +790,13 @@ function ProfileView({ events, navigate, onLike, profile, setProfile }) {
           ))}
         </div>
       ) : (
-        <div style={{ textAlign:"center", padding:"40px", color:T.sec,
-          background:T.card, borderRadius:16, marginBottom:48, border:`1px solid ${T.border}` }}>
-          <div style={{fontSize:36,marginBottom:8}}>📅</div>
-          <p style={{fontWeight:600, fontFamily:F.body, margin:0}}>Aucun événement à venir — rejoins-en un !</p>
+        <div style={{ padding:"28px 32px", color:T.sec,
+          background:T.card, borderRadius:16, marginBottom:48, border:`1px solid ${T.border}`,
+          display:"flex", alignItems:"center", gap:16 }}>
+          <span style={{ fontSize:22, color:T.border, flexShrink:0 }}>◷</span>
+          <p style={{ fontWeight:500, fontFamily:F.body, margin:0, fontSize:14 }}>
+            Aucun événement à venir. Rejoins une activité depuis l'accueil !
+          </p>
         </div>
       )}
 
