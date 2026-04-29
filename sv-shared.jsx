@@ -164,7 +164,7 @@ function ParticipantDots({ count }) {
 
 const PCOUNT = [8,5,12,6,4,9];
 
-function EventCard({ ev, idx=0, onClick }) {
+function EventCard({ ev, idx=0, onClick, onLike }) {
   const parts = PCOUNT[idx % PCOUNT.length];
   return (
     <div onClick={() => onClick && onClick(ev)}
@@ -184,6 +184,25 @@ function EventCard({ ev, idx=0, onClick }) {
         <div style={{ position:"absolute", top:12, left:12 }}>
           <Badge>{ev.cat}</Badge>
         </div>
+        {onLike && (
+          <button onClick={e => { e.stopPropagation(); onLike(ev.id); }}
+            aria-label={ev.liked ? "Retirer des favoris" : "Ajouter aux favoris"}
+            style={{
+              position:"absolute", top:12, right:12,
+              width:36, height:36, borderRadius:36,
+              background: ev.liked ? T.coral : "rgba(255,255,255,0.92)",
+              border:"none", cursor:"pointer",
+              display:"flex", alignItems:"center", justifyContent:"center",
+              fontSize:18, lineHeight:1,
+              color: ev.liked ? "#fff" : T.coral,
+              boxShadow:"0 2px 8px rgba(0,0,0,0.18)",
+              transition:"transform 0.15s, background 0.15s, color 0.15s"
+            }}
+            onMouseEnter={e=>e.currentTarget.style.transform="scale(1.1)"}
+            onMouseLeave={e=>e.currentTarget.style.transform=""}>
+            {ev.liked ? "♥" : "♡"}
+          </button>
+        )}
       </div>
       <div style={{ padding:"16px", flex:1, display:"flex", flexDirection:"column", gap:8 }}>
         <div style={{ fontWeight:600, fontSize:15, color:T.text, lineHeight:1.35, fontFamily:F.body }}>{ev.title}</div>

@@ -1,7 +1,7 @@
 // sv-screens.jsx — All views (v3 – Design System: Rammetto One + Montserrat + #FFF9EC/#5D2A42/#FB6376)
 
 // ── HOME VIEW ──────────────────────────────────────────────
-function HomeView({ events, navigate }) {
+function HomeView({ events, navigate, onLike }) {
   const [activeCat, setActiveCat] = React.useState("Tous");
   const [query, setQuery] = React.useState("");
   const [focused, setFocused] = React.useState(false);
@@ -121,7 +121,7 @@ function HomeView({ events, navigate }) {
           {filtered.length > 0 ? (
             <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20 }}>
               {filtered.map((ev,i) => (
-                <EventCard key={ev.id} ev={ev} idx={i} onClick={ev => navigate("detail", ev)} />
+                <EventCard key={ev.id} ev={ev} idx={i} onClick={ev => navigate("detail", ev)} onLike={onLike} />
               ))}
             </div>
           ) : (
@@ -140,14 +140,14 @@ function HomeView({ events, navigate }) {
           <SectionTitle action="Voir tout">Actualité</SectionTitle>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20, marginBottom:48 }}>
             {events.slice(0,3).map((ev,i) => (
-              <EventCard key={ev.id} ev={ev} idx={i} onClick={ev => navigate("detail", ev)} />
+              <EventCard key={ev.id} ev={ev} idx={i} onClick={ev => navigate("detail", ev)} onLike={onLike} />
             ))}
           </div>
 
           <SectionTitle action="Voir tout">Suggestions pour toi</SectionTitle>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:20 }}>
             {events.slice(0,4).map((ev,i) => (
-              <EventCard key={ev.id} ev={ev} idx={i+3} onClick={ev => navigate("detail", ev)} />
+              <EventCard key={ev.id} ev={ev} idx={i+3} onClick={ev => navigate("detail", ev)} onLike={onLike} />
             ))}
           </div>
         </>
@@ -157,7 +157,7 @@ function HomeView({ events, navigate }) {
 }
 
 // ── SEARCH VIEW ────────────────────────────────────────────
-function SearchView({ events, navigate }) {
+function SearchView({ events, navigate, onLike }) {
   const [query, setQuery] = React.useState("");
   const [focused, setFocused] = React.useState(false);
   const results = query.trim()
@@ -208,7 +208,7 @@ function SearchView({ events, navigate }) {
 
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20 }}>
         {results.map((ev,i) => (
-          <EventCard key={ev.id} ev={ev} idx={i} onClick={ev => navigate("detail", ev)} />
+          <EventCard key={ev.id} ev={ev} idx={i} onClick={ev => navigate("detail", ev)} onLike={onLike} />
         ))}
         {results.length===0 && (
           <div style={{ gridColumn:"1/-1", textAlign:"center", padding:"80px 0", color:T.sec }}>
@@ -222,10 +222,11 @@ function SearchView({ events, navigate }) {
 }
 
 // ── EVENT DETAIL ───────────────────────────────────────────
-function EventDetailView({ ev, navigate, onJoin }) {
+function EventDetailView({ ev, navigate, onJoin, onLike }) {
   const idx = EVENTS_DATA.findIndex(e => e.id === ev.id);
   const parts = PCOUNT[idx >= 0 ? idx : 0];
   const [joined, setJoined] = React.useState(ev.joined);
+  const liked = !!ev.liked;
 
   const infoItems = [
     { icon:"📅", label:"Date", val:`${ev.date} · ${ev.time}` },
@@ -330,8 +331,19 @@ function EventDetailView({ ev, navigate, onJoin }) {
           <button onClick={() => navigate("messages")} style={{
             width:"100%", padding:"11px", borderRadius:12, fontWeight:600,
             fontSize:14, cursor:"pointer", border:`1.5px solid ${T.border}`,
-            background:"transparent", color:T.text, fontFamily:F.body
+            background:"transparent", color:T.text, fontFamily:F.body, marginBottom:8
           }}>💬 Contacter l'organisateur</button>
+
+          {onLike && (
+            <button onClick={() => onLike(ev.id)} style={{
+              width:"100%", padding:"11px", borderRadius:12, fontWeight:600,
+              fontSize:14, cursor:"pointer",
+              border:`1.5px solid ${liked ? T.coral : T.border}`,
+              background: liked ? T.lilac : "transparent",
+              color: liked ? T.coral : T.text,
+              fontFamily:F.body, transition:"all 0.18s"
+            }}>{liked ? "♥ Retirer des favoris" : "♡ Ajouter aux favoris"}</button>
+          )}
         </div>
       </div>
     </div>
@@ -450,9 +462,11 @@ function MessagesView() {
 }
 
 // ── PROFILE VIEW ───────────────────────────────────────────
-function ProfileView({ events, navigate }) {
-  const upcoming = events.filter(e => e.joined).slice(0,3);
+function ProfileView({ events, navigate, onLike }) {
+  const joinedAll = events.filter(e => e.joined);
+  const upcoming = joinedAll.slice(0,3);
   const past = events.filter(e => !e.joined).slice(0,2);
+  const liked = events.filter(e => e.liked);
 
   return (
     <div style={{ paddingBottom:64 }}>
@@ -474,7 +488,7 @@ function ProfileView({ events, navigate }) {
             @marie.dupont · Droit, Bordeaux
           </p>
           <div style={{ display:"flex", gap:32 }}>
-            {[["4","Événements"],["12","Amis"],["3","Créés"]].map(([n,l])=>(
+            {[[String(joinedAll.length),"Événements"],["12","Amis"],["3","Créés"],[String(liked.length),"Favoris"]].map(([n,l])=>(
               <div key={l}>
                 <p style={{ fontSize:22, fontFamily:F.title, fontWeight:400, color:"#fff", margin:0 }}>{n}</p>
                 <p style={{ fontSize:12, color:"rgba(255,255,255,0.55)", fontFamily:F.body, margin:0 }}>{l}</p>
@@ -507,12 +521,30 @@ function ProfileView({ events, navigate }) {
         </p>
       </div>
 
+      {/* Favoris */}
+      <SectionTitle>♥ Mes favoris</SectionTitle>
+      {liked.length > 0 ? (
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20, marginBottom:48 }}>
+          {liked.map((ev,i) => (
+            <EventCard key={ev.id} ev={ev} idx={i} onClick={ev => navigate("detail", ev)} onLike={onLike} />
+          ))}
+        </div>
+      ) : (
+        <div style={{ textAlign:"center", padding:"40px", color:T.sec,
+          background:T.card, borderRadius:16, marginBottom:48, border:`1px solid ${T.border}` }}>
+          <div style={{fontSize:36,marginBottom:8}}>♡</div>
+          <p style={{fontWeight:600, fontFamily:F.body, margin:0}}>
+            Aucun favori — clique sur le ♡ d'une activité pour la sauvegarder
+          </p>
+        </div>
+      )}
+
       {/* Upcoming */}
       <SectionTitle action="Voir tout">Événements à venir</SectionTitle>
       {upcoming.length > 0 ? (
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:20, marginBottom:48 }}>
           {upcoming.map((ev,i) => (
-            <EventCard key={ev.id} ev={ev} idx={i} onClick={ev => navigate("detail", ev)} />
+            <EventCard key={ev.id} ev={ev} idx={i} onClick={ev => navigate("detail", ev)} onLike={onLike} />
           ))}
         </div>
       ) : (

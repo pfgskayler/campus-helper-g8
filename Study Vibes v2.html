@@ -210,6 +210,11 @@ function App() {
     if (selectedEvent?.id===id) setSelectedEvent(ev => ({...ev, joined:!ev.joined}));
   };
 
+  const toggleLike = (id) => {
+    setEvents(evs => evs.map(e => e.id===id ? {...e, liked:!e.liked} : e));
+    if (selectedEvent?.id===id) setSelectedEvent(ev => ({...ev, liked:!ev.liked}));
+  };
+
   const setTweak = (k, v) => {
     const next = typeof k==="object" ? {...tweaks,...k} : {...tweaks,[k]:v};
     setTweakState(next);
@@ -230,11 +235,11 @@ function App() {
           : screen==="messages" ? "80px 32px 0"
           : "96px 32px 0",
       }}>
-        {screen==="home"     && <HomeView events={events} navigate={navigate} />}
+        {screen==="home"     && <HomeView events={events} navigate={navigate} onLike={toggleLike} />}
         {screen==="messages" && <MessagesView navigate={navigate} />}
-        {screen==="profile"  && <ProfileView events={events} navigate={navigate} />}
+        {screen==="profile"  && <ProfileView events={events} navigate={navigate} onLike={toggleLike} />}
         {screen==="detail"   && selectedEvent && (
-          <EventDetailView ev={selectedEvent} navigate={navigate} onJoin={toggleJoin} />
+          <EventDetailView ev={selectedEvent} navigate={navigate} onJoin={toggleJoin} onLike={toggleLike} />
         )}
         {screen==="auth"     && <AuthView navigate={navigate} />}
         {screen==="create"   && <CreateEventView navigate={navigate} />}
