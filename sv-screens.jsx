@@ -354,10 +354,20 @@ function EventDetailView({ ev, navigate, onJoin, onLike }) {
 function MessagesView() {
   const [active, setActive] = React.useState(0);
   const [draft, setDraft] = React.useState("");
-  const [convos, setConvos] = React.useState(CONVOS_DATA.map(c => ({...c, msgs:[...c.msgs]})));
+  const [convos, setConvos] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem("sv_convos");
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return CONVOS_DATA.map(c => ({...c, msgs:[...c.msgs]}));
+  });
   const [typing, setTyping] = React.useState(false);
   const bottomRef = React.useRef(null);
   const convo = convos[active];
+
+  React.useEffect(() => {
+    localStorage.setItem("sv_convos", JSON.stringify(convos));
+  }, [convos]);
 
   React.useEffect(() => {
     if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior:"smooth" });
