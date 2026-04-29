@@ -442,7 +442,7 @@ function MessagesView() {
       </div>
 
       {/* Chat */}
-      <div style={{ display:"flex", flexDirection:"column" }}>
+      <div style={{ display:"flex", flexDirection:"column", minHeight:0 }}>
         <div style={{ padding:"16px 24px", borderBottom:`1px solid ${T.border}`,
           display:"flex", alignItems:"center", gap:12 }}>
           <Avatar init={convo.init} color={convo.color} size={40} />
