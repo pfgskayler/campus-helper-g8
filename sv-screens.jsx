@@ -349,10 +349,10 @@ function EventDetailView({ ev, navigate, onJoin, onLike }) {
   const liked = !!ev.liked;
 
   const infoItems = [
-    { icon:"📅", label:"Date", val:`${ev.date} · ${ev.time}` },
-    { icon:"📍", label:"Lieu", val:ev.loc },
-    { icon:"🗺️", label:"Adresse", val:ev.address },
-    { icon:"👤", label:"Organisé par", val:ev.host },
+    { icon:"", label:"Date", val:`${ev.date} · ${ev.time}` },
+    { icon:"", label:"Lieu", val:ev.loc },
+    { icon:"", label:"Adresse", val:ev.address },
+    { icon:"", label:"Organisé par", val:ev.host },
   ];
 
   return (
@@ -384,7 +384,7 @@ function EventDetailView({ ev, navigate, onJoin, onLike }) {
                 background:T.muted, borderRadius:14, padding:"16px",
                 border:`1px solid ${T.border}`
               }}>
-                <p style={{ fontSize:12, color:T.sec, fontWeight:600, fontFamily:F.body, marginBottom:4 }}>{icon} {label}</p>
+                <p style={{ fontSize:12, color:T.sec, fontWeight:600, fontFamily:F.body, marginBottom:4 }}>{label}</p>
                 <p style={{ fontSize:14, fontWeight:600, color:T.text, fontFamily:F.body, margin:0 }}>{val}</p>
               </div>
             ))}
