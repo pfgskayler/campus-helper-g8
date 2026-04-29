@@ -1,7 +1,7 @@
 // sv-screens.jsx — All views (v3 – Design System: Rammetto One + Montserrat + #FFF9EC/#5D2A42/#FB6376)
 
 // ── HOME VIEW ──────────────────────────────────────────────
-function HomeView({ events, navigate, onLike }) {
+function HomeView({ events, navigate, onLike, profile }) {
   const [activeCat, setActiveCat] = React.useState("Tous");
   const [query, setQuery] = React.useState("");
   const [focused, setFocused] = React.useState(false);
@@ -27,7 +27,7 @@ function HomeView({ events, navigate, onLike }) {
       }}>
         {/* Greeting + title */}
         <p style={{ fontSize:14, color:"rgba(255,255,255,0.55)", fontFamily:F.body, fontWeight:600, marginBottom:10, textAlign:"center" }}>
-          Bonjour Marie 👋
+          Bonjour {profile ? profile.name.split(" ")[0] : "toi"} 👋
         </p>
         <h1 style={{ fontSize:38, fontFamily:F.title, fontWeight:400, color:"#fff", margin:"0 0 6px", lineHeight:1.2, textAlign:"center" }}>
           Événements à Bordeaux

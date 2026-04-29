@@ -257,7 +257,7 @@ function App() {
           : screen==="messages" ? "80px 32px 0"
           : "96px 32px 0",
       }}>
-        {screen==="home"     && <HomeView events={events} navigate={navigate} onLike={toggleLike} />}
+        {screen==="home"     && <HomeView events={events} navigate={navigate} onLike={toggleLike} profile={profile} />}
         {screen==="messages" && <MessagesView navigate={navigate} convos={convos} setConvos={setConvos} />}
         {screen==="profile"  && <ProfileView events={events} navigate={navigate} onLike={toggleLike} profile={profile} setProfile={setProfile} />}
         {screen==="detail"   && selectedEvent && (
