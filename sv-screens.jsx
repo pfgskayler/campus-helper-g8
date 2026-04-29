@@ -626,9 +626,9 @@ function MessagesView({ convos, setConvos }) {
 
 // ── PROFILE VIEW ───────────────────────────────────────────
 function ProfileView({ events, navigate, onLike }) {
-  const joinedAll = events.filter(e => e.joined);
+  const joinedAll = events.filter(e => e.joined && !e.past);
   const upcoming = joinedAll.slice(0,3);
-  const past = events.filter(e => !e.joined).slice(0,2);
+  const past = events.filter(e => e.past);
   const liked = events.filter(e => e.liked);
 
   return (
