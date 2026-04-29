@@ -629,13 +629,96 @@ function MessagesView({ convos, setConvos }) {
 // ── PROFILE VIEW ───────────────────────────────────────────
 function ProfileView({ events, navigate, onLike }) {
   const [showAllUpcoming, setShowAllUpcoming] = React.useState(false);
+  const [editing, setEditing] = React.useState(false);
+
+  const loadProfile = () => {
+    try { return JSON.parse(localStorage.getItem("sv_profile")) || null; } catch(e) { return null; }
+  };
+  const [profile, setProfile] = React.useState(() => loadProfile() || {
+    name: "Marie Dupont", handle: "marie.dupont", study: "Droit", city: "Bordeaux",
+    bio: "Étudiante en droit à Bordeaux 🎓 · Passionnée de musique, surf et coworking au bord de la Garonne ☕"
+  });
+  const [draft, setDraft] = React.useState(profile);
+
+  const saveProfile = () => {
+    localStorage.setItem("sv_profile", JSON.stringify(draft));
+    setProfile(draft);
+    setEditing(false);
+  };
+
   const joinedAll = events.filter(e => e.joined && !e.past);
   const upcoming = showAllUpcoming ? joinedAll : joinedAll.slice(0,3);
   const past = events.filter(e => e.past);
   const liked = events.filter(e => e.liked);
+  const initials = profile.name.split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase();
 
   return (
     <div style={{ paddingBottom:64 }}>
+
+      {/* ── EDIT MODAL ── */}
+      {editing && (
+        <div onClick={() => setEditing(false)} style={{
+          position:"fixed", inset:0, background:"rgba(93,42,66,0.45)",
+          zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center"
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background:T.card, borderRadius:24, padding:"36px 40px",
+            width:"100%", maxWidth:520, boxShadow:"0 20px 60px rgba(93,42,66,0.25)"
+          }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:28 }}>
+              <h2 style={{ fontSize:20, fontFamily:F.title, fontWeight:400, color:T.text, margin:0 }}>Modifier le profil</h2>
+              <button onClick={() => setEditing(false)} style={{
+                background:"none", border:"none", fontSize:20, cursor:"pointer", color:T.sec
+              }}>✕</button>
+            </div>
+            {[
+              { label:"Nom complet", key:"name", placeholder:"Marie Dupont" },
+              { label:"Pseudo", key:"handle", placeholder:"marie.dupont" },
+              { label:"Filière", key:"study", placeholder:"Droit, Informatique…" },
+              { label:"Ville", key:"city", placeholder:"Bordeaux" },
+            ].map(({ label, key, placeholder }) => (
+              <div key={key} style={{ marginBottom:16 }}>
+                <p style={{ fontSize:12, fontWeight:600, color:T.sec, fontFamily:F.body,
+                  marginBottom:6, textTransform:"uppercase", letterSpacing:"0.06em" }}>{label}</p>
+                <input
+                  value={draft[key]}
+                  onChange={e => setDraft(p => ({...p, [key]: e.target.value}))}
+                  placeholder={placeholder}
+                  style={{ width:"100%", background:T.muted, border:`1.5px solid ${T.border}`,
+                    borderRadius:12, padding:"11px 16px", fontSize:14, fontFamily:F.body,
+                    color:T.text, outline:"none", boxSizing:"border-box" }}
+                />
+              </div>
+            ))}
+            <div style={{ marginBottom:24 }}>
+              <p style={{ fontSize:12, fontWeight:600, color:T.sec, fontFamily:F.body,
+                marginBottom:6, textTransform:"uppercase", letterSpacing:"0.06em" }}>Bio</p>
+              <textarea
+                value={draft.bio}
+                onChange={e => setDraft(p => ({...p, bio: e.target.value}))}
+                rows={3}
+                placeholder="Décris-toi en quelques mots…"
+                style={{ width:"100%", background:T.muted, border:`1.5px solid ${T.border}`,
+                  borderRadius:12, padding:"11px 16px", fontSize:14, fontFamily:F.body,
+                  color:T.text, outline:"none", resize:"none", boxSizing:"border-box" }}
+              />
+            </div>
+            <div style={{ display:"flex", gap:12, justifyContent:"flex-end" }}>
+              <button onClick={() => setEditing(false)} style={{
+                padding:"11px 24px", borderRadius:12, fontWeight:600, fontSize:14,
+                cursor:"pointer", background:"none", border:`1.5px solid ${T.border}`,
+                color:T.sec, fontFamily:F.body
+              }}>Annuler</button>
+              <button onClick={saveProfile} className="sv-btn-primary" style={{
+                padding:"11px 28px", borderRadius:12, fontWeight:700, fontSize:14,
+                cursor:"pointer", background:T.coral, border:"none", color:"#fff",
+                fontFamily:F.body, boxShadow:"0 4px 14px rgba(251,99,118,0.35)"
+              }}>Enregistrer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header banner */}
       <div style={{
         background:`linear-gradient(135deg, ${T.purple} 0%, #8B3A5C 100%)`,
@@ -647,11 +730,11 @@ function ProfileView({ events, navigate, onLike }) {
           border:"4px solid rgba(255,255,255,0.25)",
           display:"flex", alignItems:"center", justifyContent:"center",
           fontSize:38, fontWeight:700, color:"#fff", flexShrink:0, fontFamily:F.body
-        }}>M</div>
+        }}>{initials}</div>
         <div style={{ flex:1 }}>
-          <h1 style={{ fontSize:24, fontFamily:F.title, fontWeight:400, color:"#fff", marginBottom:4 }}>Marie Dupont</h1>
+          <h1 style={{ fontSize:24, fontFamily:F.title, fontWeight:400, color:"#fff", marginBottom:4 }}>{profile.name}</h1>
           <p style={{ fontSize:14, color:"rgba(255,255,255,0.6)", fontFamily:F.body, fontWeight:500, marginBottom:20 }}>
-            @marie.dupont · Droit, Bordeaux
+            @{profile.handle} · {profile.study}, {profile.city}
           </p>
           <div style={{ display:"flex", gap:32 }}>
             {[[String(joinedAll.length),"Événements"],["12","Amis"],["3","Créés"],[String(liked.length),"Favoris"]].map(([n,l])=>(
@@ -663,7 +746,7 @@ function ProfileView({ events, navigate, onLike }) {
           </div>
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-          <button style={{
+          <button onClick={() => { setDraft(profile); setEditing(true); }} style={{
             background:"rgba(255,255,255,0.15)", color:"#fff",
             border:"1.5px solid rgba(255,255,255,0.25)", borderRadius:12,
             padding:"11px 24px", fontWeight:700, fontSize:14,
@@ -683,7 +766,7 @@ function ProfileView({ events, navigate, onLike }) {
         border:`1px solid ${T.border}`, marginBottom:40 }}>
         <p style={{ fontSize:12, fontWeight:600, color:T.sec, fontFamily:F.body, marginBottom:8, textTransform:"uppercase", letterSpacing:"0.06em" }}>À propos</p>
         <p style={{ fontSize:15, color:T.text, lineHeight:1.7, margin:0, fontFamily:F.body, fontWeight:400 }}>
-          Étudiante en droit à Bordeaux 🎓 · Passionnée de musique, surf et coworking au bord de la Garonne ☕
+          {profile.bio}
         </p>
       </div>
 
