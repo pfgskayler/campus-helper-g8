@@ -34,6 +34,9 @@ const EVENTS_DATA = [
   { id:10, title:"Soirée ciné plein air", date:"Jeu 8 Mai", time:"21h–23h30", loc:"Quais de la Garonne", address:"Quai Louis XVIII, Bordeaux", cat:"Sortie", img:"https://picsum.photos/seed/sv10/800/420", joined:true, host:"Antoine Faure", hostInit:"AF", hostColor:"#8B5CF6", desc:"Projection en plein air sur les quais avec apéro avant le film. Le film sera annoncé la veille — surprise garantie. Amène ton plaid et de quoi grignoter. Entrée libre, inscription pour réserver ta place." },
   { id:11, title:"Bootcamp photo smartphone", date:"Mar 6 Mai", time:"15h–17h30", loc:"Jardin Public", address:"Cours de Verdun, Bordeaux", cat:"Art", img:"https://picsum.photos/seed/sv11/800/420", joined:false, host:"Yasmine Haddad", hostInit:"YH", hostColor:"#FB6376", desc:"Apprends à sublimer tes photos avec juste ton téléphone. Composition, lumière naturelle, retouche rapide — on couvre tout en balade dans le Jardin Public. Max 10 participants pour un suivi perso." },
   { id:12, title:"Session coworking café Victoire", date:"Mer 7 Mai", time:"9h–12h", loc:"Café des Arts", address:"138 cours Victor Hugo, Bordeaux", cat:"Coworking", img:"https://picsum.photos/seed/sv12/800/420", joined:false, host:"Sofiane Oubella", hostInit:"SO", hostColor:"#5D2A42", desc:"Matinée de travail au Café des Arts, une adresse calme et inspirante près de la place de la Victoire. On commande chacun son café et on bosse dans une bonne ambiance. Idéal pour rédiger, coder ou réviser." },
+  { id:13, title:"Atelier cuisine du monde", date:"Sam 10 Mai", time:"14h–17h", loc:"Marché des Capucins", address:"Place des Capucins, Bordeaux", cat:"Gastronomie", img:"https://picsum.photos/seed/sv13/800/420", joined:false, host:"Amina Toure", hostInit:"AT", hostColor:"#F59E0B", desc:"On se retrouve au marché pour cuisiner ensemble des plats du monde. Chaque participant apporte une recette de son pays ou de sa région. Tout le monde repart avec de nouvelles recettes et le ventre plein." },
+  { id:14, title:"Dégustation vins de Bordeaux", date:"Ven 9 Mai", time:"19h–21h30", loc:"Cave des Chartrons", address:"58 rue Notre-Dame, Bordeaux", cat:"Gastronomie", img:"https://picsum.photos/seed/sv14/800/420", joined:false, host:"Pierre Lacombe", hostInit:"PL", hostColor:"#8B5CF6", desc:"Initiation à la dégustation de vins bordelais avec un sommelier amateur. 5 cuvées au programme, accord mets et vins, histoire du vignoble. Participation de 8€ pour couvrir les bouteilles. Places limitées à 12." },
+  { id:15, title:"Brunch étudiant solidaire", date:"Dim 11 Mai", time:"10h–13h", loc:"Darwin Écosystème", address:"87 quai des Queyries, Bordeaux", cat:"Gastronomie", img:"https://picsum.photos/seed/sv15/800/420", joined:false, host:"Clara Vidal", hostInit:"CV", hostColor:"#FB6376", desc:"Brunch participatif où chacun apporte un plat à partager. Salé, sucré, fait maison ou du marché — tout est bienvenu. Ambiance conviviale en terrasse au bord de la Garonne. Entrée libre, venez nombreux !" },
 ];
 
 const CONVOS_DATA = [
@@ -89,7 +92,7 @@ const CONVOS_DATA = [
   ]},
 ];
 
-const CATS = ["Tous","Révisions","Coworking","Sport","Musique","Sortie","Art"];
+const CATS = ["Tous","Révisions","Coworking","Sport","Musique","Sortie","Art","Gastronomie"];
 
 // ── SHARED COMPONENTS ──────────────────────────────────────
 
@@ -197,7 +200,7 @@ function ParticipantDots({ count }) {
   );
 }
 
-const PCOUNT = [8,5,12,6,4,9,7,14,3,11,6,8];
+const PCOUNT = [8,5,12,6,4,9,7,14,3,11,6,8,10,7,15];
 
 function EventCard({ ev, idx=0, onClick, onLike }) {
   const parts = PCOUNT[idx % PCOUNT.length];
