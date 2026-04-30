@@ -826,76 +826,86 @@ function ProfileView({ events, navigate, onLike, profile, setProfile }) {
 }
 
 // ── AUTH VIEW ──────────────────────────────────────────────
-function AuthView({ navigate }) {
+function AuthView({ onLogin }) {
   const [isLogin, setIsLogin] = React.useState(true);
   const [form, setForm] = React.useState({name:"",email:"",password:""});
   const set = k => e => setForm(f=>({...f,[k]:e.target.value}));
 
+  const handleSubmit = () => {
+    if (!form.email || !form.password) return;
+    if (!isLogin && !form.name) return;
+    onLogin({ name: isLogin ? "Marie Dupont" : form.name });
+  };
+
   return (
     <div style={{
-      minHeight:"calc(100vh - 64px)", display:"flex",
-      alignItems:"center", justifyContent:"center", padding:"40px 0"
+      minHeight:"100vh", display:"flex", flexDirection:"column",
+      alignItems:"center", justifyContent:"center",
+      background:`linear-gradient(160deg, ${T.purple} 0%, #8B3A5C 55%, #C04A6A 100%)`,
+      padding:"40px 24px"
     }}>
-      <div style={{ width:"100%", maxWidth:440 }}>
-        <div style={{ textAlign:"center", marginBottom:40 }}>
-          <h1 style={{ fontSize:32, fontFamily:F.title, fontWeight:400, color:T.coral, marginBottom:8 }}>
-            Study Vibes
-          </h1>
-          <p style={{ fontSize:14, color:T.sec, fontFamily:F.body, fontWeight:500, margin:0 }}>
-            {isLogin ? "Content de te revoir 👋" : "Rejoins la communauté bordelaise 🎓"}
-          </p>
+      <div style={{ marginBottom:40, textAlign:"center" }}>
+        <p style={{ fontSize:12, color:"rgba(255,255,255,0.45)", fontFamily:F.body,
+          fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:14 }}>
+          Bordeaux · Étudiants
+        </p>
+        <h1 style={{ fontSize:44, fontFamily:F.title, fontWeight:400, color:"#fff", margin:0, lineHeight:1.1 }}>
+          Study Vibes
+        </h1>
+        <p style={{ fontSize:15, color:"rgba(255,255,255,0.55)", fontFamily:F.body,
+          fontWeight:500, margin:"12px 0 0" }}>
+          {isLogin ? "Content de te revoir !" : "Rejoins la communauté bordelaise"}
+        </p>
+      </div>
+
+      <div style={{ width:"100%", maxWidth:420,
+        background:T.card, borderRadius:24, padding:"36px",
+        boxShadow:"0 24px 64px rgba(0,0,0,0.25)" }}>
+
+        <div style={{ display:"flex", background:T.muted, borderRadius:14, padding:4, marginBottom:28 }}>
+          {["Connexion","Inscription"].map((l,i) => (
+            <button key={l} onClick={()=>setIsLogin(i===0)} className="sv-auth-tab" style={{
+              flex:1, padding:"10px", borderRadius:11,
+              fontWeight:700, fontSize:14, fontFamily:F.body,
+              background: (isLogin?i===0:i===1) ? T.card : "transparent",
+              color: (isLogin?i===0:i===1) ? T.text : T.sec,
+              border:"none", cursor:"pointer",
+              boxShadow: (isLogin?i===0:i===1) ? "0 2px 8px rgba(93,42,66,0.08)" : "none",
+            }}>{l}</button>
+          ))}
         </div>
 
-        <div style={{ background:T.card, borderRadius:24, padding:"36px",
-          boxShadow:"0 8px 40px rgba(93,42,66,0.12)", border:`1px solid ${T.border}` }}>
-
-          {/* Toggle */}
-          <div style={{ display:"flex", background:T.muted, borderRadius:14, padding:4, marginBottom:28 }}>
-            {["Connexion","Inscription"].map((l,i) => (
-              <button key={l} onClick={()=>setIsLogin(i===0)} style={{
-                flex:1, padding:"10px", borderRadius:11,
-                fontWeight:700, fontSize:14, fontFamily:F.body,
-                background: (isLogin?i===0:i===1) ? T.card : "transparent",
-                color: (isLogin?i===0:i===1) ? T.text : T.sec,
-                border:"none", cursor:"pointer",
-                boxShadow: (isLogin?i===0:i===1) ? "0 2px 8px rgba(93,42,66,0.08)" : "none",
-                transition:"all 0.2s"
-              }}>{l}</button>
-            ))}
-          </div>
-
-          <div style={{ display:"flex", flexDirection:"column", gap:16, marginBottom:24 }}>
-            {!isLogin && <Input label="Prénom & Nom" placeholder="Marie Dupont" value={form.name} onChange={set("name")} required />}
-            <Input label="Adresse e-mail" type="email" placeholder="marie@u-bordeaux.fr" value={form.email} onChange={set("email")} required />
-            <Input label="Mot de passe" type="password" placeholder="••••••••" value={form.password} onChange={set("password")} required />
-          </div>
-
-          {isLogin && (
-            <div style={{ textAlign:"right", marginBottom:20 }}>
-              <button style={{ fontSize:13, color:T.coral, fontWeight:600,
-                background:"none", border:"none", cursor:"pointer", fontFamily:F.body }}>
-                Mot de passe oublié ?
-              </button>
-            </div>
-          )}
-
-          <button onClick={()=>navigate("home")} className="sv-btn-primary" style={{
-            width:"100%", padding:"14px", background:T.coral, color:"#fff",
-            border:"none", borderRadius:14, fontFamily:F.body,
-            fontWeight:700, fontSize:16, cursor:"pointer",
-            boxShadow:"0 4px 16px rgba(251,99,118,0.35)"
-          }}>
-            {isLogin ? "Se connecter" : "Créer mon compte"}
-          </button>
-
-          <p style={{ textAlign:"center", marginTop:20, fontSize:13, color:T.sec, fontFamily:F.body, margin:"20px 0 0" }}>
-            {isLogin ? "Pas encore de compte ? " : "Déjà un compte ? "}
-            <button onClick={()=>setIsLogin(!isLogin)} style={{
-              color:T.coral, fontWeight:700, background:"none", border:"none",
-              cursor:"pointer", fontFamily:F.body
-            }}>{isLogin ? "S'inscrire" : "Se connecter"}</button>
-          </p>
+        <div style={{ display:"flex", flexDirection:"column", gap:16, marginBottom:24 }}>
+          {!isLogin && <Input label="Prénom & Nom" placeholder="Marie Dupont" value={form.name} onChange={set("name")} required />}
+          <Input label="Adresse e-mail" type="email" placeholder="marie@u-bordeaux.fr" value={form.email} onChange={set("email")} required />
+          <Input label="Mot de passe" type="password" placeholder="••••••••" value={form.password} onChange={set("password")} required />
         </div>
+
+        {isLogin && (
+          <div style={{ textAlign:"right", marginBottom:20 }}>
+            <button style={{ fontSize:13, color:T.coral, fontWeight:600,
+              background:"none", border:"none", cursor:"pointer", fontFamily:F.body }}>
+              Mot de passe oublié ?
+            </button>
+          </div>
+        )}
+
+        <button onClick={handleSubmit} className="sv-btn-primary" style={{
+          width:"100%", padding:"14px", background:T.coral, color:"#fff",
+          border:"none", borderRadius:14, fontFamily:F.body,
+          fontWeight:700, fontSize:16, cursor:"pointer",
+          boxShadow:"0 4px 16px rgba(251,99,118,0.35)"
+        }}>
+          {isLogin ? "Se connecter" : "Créer mon compte"}
+        </button>
+
+        <p style={{ textAlign:"center", fontSize:13, color:T.sec, fontFamily:F.body, margin:"20px 0 0" }}>
+          {isLogin ? "Pas encore de compte ? " : "Déjà un compte ? "}
+          <button onClick={()=>setIsLogin(!isLogin)} style={{
+            color:T.coral, fontWeight:700, background:"none", border:"none",
+            cursor:"pointer", fontFamily:F.body
+          }}>{isLogin ? "S'inscrire" : "Se connecter"}</button>
+        </p>
       </div>
     </div>
   );

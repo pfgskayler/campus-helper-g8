@@ -134,7 +134,7 @@ const NAV_LINKS = [
   { id:"profile",  label:"Profil"    },
 ];
 
-function Navbar({ screen, navigate, unread, profile }) {
+function Navbar({ screen, navigate, unread, profile, onLogout }) {
   const initials = profile ? profile.name.split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase() : "M";
   return (
     <nav style={{
@@ -192,11 +192,11 @@ function Navbar({ screen, navigate, unread, profile }) {
           border:"none", cursor:"pointer", color:"#fff",
           fontWeight:700, fontSize:15, fontFamily:"'Montserrat', sans-serif"
         }}>{initials}</button>
-        <button onClick={()=>navigate("auth")} style={{
+        <button onClick={onLogout} style={{
           background:"none", border:`1.5px solid #EEE0D4`, borderRadius:10,
           padding:"7px 14px", fontSize:13, fontWeight:600, color:"#9E7A8A",
           cursor:"pointer", fontFamily:"'Montserrat', sans-serif"
-        }}>Connexion</button>
+        }}>Déconnexion</button>
       </div>
     </nav>
   );
@@ -204,6 +204,7 @@ function Navbar({ screen, navigate, unread, profile }) {
 
 // ── APP ────────────────────────────────────────────────────
 function App() {
+  const [loggedIn, setLoggedIn] = useState(() => !!localStorage.getItem("sv_auth"));
   const [screen, setScreen] = useState("home");
   const [history, setHistory] = useState(["home"]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -222,8 +223,25 @@ function App() {
       if (saved) return saved;
     } catch(e) {}
     return { name:"Marie Dupont", handle:"marie.dupont", study:"Droit", city:"Bordeaux",
-      bio:"Étudiante en droit à Bordeaux 🎓 · Passionnée de musique, surf et coworking au bord de la Garonne ☕" };
+      bio:"Étudiante en droit à Bordeaux · Passionnée de musique, surf et coworking au bord de la Garonne" };
   });
+
+  const handleLogin = ({ name }) => {
+    if (name && name !== "Marie Dupont") {
+      const updated = { ...profile, name };
+      setProfile(updated);
+      localStorage.setItem("sv_profile", JSON.stringify(updated));
+    }
+    localStorage.setItem("sv_auth", "1");
+    setLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("sv_auth");
+    setLoggedIn(false);
+    setScreen("home");
+    setHistory(["home"]);
+  };
 
   const navigate = (to, data) => {
     if (to === -1) {
@@ -257,18 +275,19 @@ function App() {
   };
 
   const unread = convos.reduce((n,c) => n + (c.unread || 0), 0);
-  const showNav = screen !== "auth";
+
+  if (!loggedIn) {
+    return <AuthView onLogin={handleLogin} />;
+  }
 
   return (
     <div style={{ minHeight:"100vh", background:"#FFF9EC" }}>
-      {showNav && <Navbar screen={screen} navigate={navigate} unread={unread} profile={profile} />}
+      <Navbar screen={screen} navigate={navigate} unread={unread} profile={profile} onLogout={handleLogout} />
 
       <main style={{
         maxWidth: screen==="messages" ? 1200 : 1100,
         margin:"0 auto",
-        padding: screen==="auth" ? "0"
-          : screen==="messages" ? "80px 32px 0"
-          : "96px 32px 0",
+        padding: screen==="messages" ? "80px 32px 0" : "96px 32px 0",
       }}>
         {screen==="home"     && <HomeView events={events} navigate={navigate} onLike={toggleLike} profile={profile} />}
         {screen==="messages" && <MessagesView navigate={navigate} convos={convos} setConvos={setConvos} />}
@@ -276,7 +295,6 @@ function App() {
         {screen==="detail"   && selectedEvent && (
           <EventDetailView ev={selectedEvent} navigate={navigate} onJoin={toggleJoin} onLike={toggleLike} />
         )}
-        {screen==="auth"     && <AuthView navigate={navigate} />}
         {screen==="create"   && <CreateEventView navigate={navigate} />}
       </main>
 
@@ -292,9 +310,9 @@ function App() {
             tweaks={tweaks} setTweak={(k,v)=>{ setTweak(k,v); setScreen(v); }} />
         </TweakSection>
         <TweakSection title="Pages spéciales">
-          <TweakButton label="Auth / Connexion" onClick={()=>setScreen("auth")} />
           <TweakButton label="Créer un événement" onClick={()=>setScreen("create")} />
           <TweakButton label="Détail événement" onClick={()=>{ setSelectedEvent(events[0]); setScreen("detail"); }} />
+          <TweakButton label="Se déconnecter" onClick={handleLogout} />
         </TweakSection>
       </TweaksPanel>
     </div>
