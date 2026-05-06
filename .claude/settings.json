@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat /Users/boucher/Desktop/mon-projet/package.json 2>/dev/null || echo \"NOT FOUND\")",
+      "Read(//Users/boucher/Desktop/mon-projet/**)"
+    ]
+  }
+}

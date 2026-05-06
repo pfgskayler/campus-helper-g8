@@ -828,13 +828,35 @@ function ProfileView({ events, navigate, onLike, profile, setProfile }) {
 // ── AUTH VIEW ──────────────────────────────────────────────
 function AuthView({ onLogin }) {
   const [isLogin, setIsLogin] = React.useState(true);
-  const [form, setForm] = React.useState({name:"",email:"",password:""});
-  const set = k => e => setForm(f=>({...f,[k]:e.target.value}));
+  const [form, setForm]       = React.useState({ name:"", email:"", password:"", school:"", city:"" });
+  const [error, setError]     = React.useState("");
+  const [info, setInfo]       = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const set = k => e => setForm(f => ({...f, [k]: e.target.value}));
 
-  const handleSubmit = () => {
-    if (!form.email || !form.password) return;
-    if (!isLogin && !form.name) return;
-    onLogin({ name: isLogin ? "Marie Dupont" : form.name });
+  const handleSubmit = async () => {
+    setError(""); setInfo("");
+    if (!form.email || !form.password) { setError("E-mail et mot de passe requis."); return; }
+    if (!isLogin && !form.name)         { setError("Le nom est requis."); return; }
+    setLoading(true);
+    try {
+      if (isLogin) {
+        const data = await DB.signIn(form.email, form.password);
+        onLogin(data.user);
+      } else {
+        const data = await DB.signUp(form.email, form.password, form.name, form.school, form.city);
+        if (data.session) {
+          onLogin(data.user);
+        } else {
+          // Confirmation e-mail requise
+          setInfo("Vérifie ta boîte mail pour confirmer ton compte puis connecte-toi.");
+          setIsLogin(true);
+        }
+      }
+    } catch(e) {
+      setError(e.message || "Une erreur est survenue.");
+    }
+    setLoading(false);
   };
 
   return (
@@ -864,7 +886,8 @@ function AuthView({ onLogin }) {
 
         <div style={{ display:"flex", background:T.muted, borderRadius:14, padding:4, marginBottom:28 }}>
           {["Connexion","Inscription"].map((l,i) => (
-            <button key={l} onClick={()=>setIsLogin(i===0)} className="sv-auth-tab" style={{
+            <button key={l} onClick={()=>{ setIsLogin(i===0); setError(""); setInfo(""); }}
+              className="sv-auth-tab" style={{
               flex:1, padding:"10px", borderRadius:11,
               fontWeight:700, fontSize:14, fontFamily:F.body,
               background: (isLogin?i===0:i===1) ? T.card : "transparent",
@@ -876,7 +899,13 @@ function AuthView({ onLogin }) {
         </div>
 
         <div style={{ display:"flex", flexDirection:"column", gap:16, marginBottom:24 }}>
-          {!isLogin && <Input label="Prénom & Nom" placeholder="Marie Dupont" value={form.name} onChange={set("name")} required />}
+          {!isLogin && (
+            <>
+              <Input label="Prénom & Nom" placeholder="Marie Dupont" value={form.name} onChange={set("name")} required />
+              <Input label="École / Université" placeholder="Université de Bordeaux" value={form.school} onChange={set("school")} />
+              <Input label="Ville" placeholder="Bordeaux" value={form.city} onChange={set("city")} />
+            </>
+          )}
           <Input label="Adresse e-mail" type="email" placeholder="marie@u-bordeaux.fr" value={form.email} onChange={set("email")} required />
           <Input label="Mot de passe" type="password" placeholder="••••••••" value={form.password} onChange={set("password")} required />
         </div>
@@ -890,18 +919,31 @@ function AuthView({ onLogin }) {
           </div>
         )}
 
-        <button onClick={handleSubmit} className="sv-btn-primary" style={{
+        {error && (
+          <div style={{ background:"#FDE8EC", border:`1px solid ${T.coral}`, borderRadius:10,
+            padding:"10px 14px", marginBottom:16, fontSize:13, color:T.text, fontFamily:F.body }}>
+            {error}
+          </div>
+        )}
+        {info && (
+          <div style={{ background:"#E7F8EF", border:"1px solid #059669", borderRadius:10,
+            padding:"10px 14px", marginBottom:16, fontSize:13, color:"#065F46", fontFamily:F.body }}>
+            {info}
+          </div>
+        )}
+
+        <button onClick={handleSubmit} disabled={loading} className="sv-btn-primary" style={{
           width:"100%", padding:"14px", background:T.coral, color:"#fff",
           border:"none", borderRadius:14, fontFamily:F.body,
-          fontWeight:700, fontSize:16, cursor:"pointer",
-          boxShadow:"0 4px 16px rgba(251,99,118,0.35)"
+          fontWeight:700, fontSize:16, cursor: loading ? "not-allowed" : "pointer",
+          boxShadow:"0 4px 16px rgba(251,99,118,0.35)", opacity: loading ? 0.7 : 1
         }}>
-          {isLogin ? "Se connecter" : "Créer mon compte"}
+          {loading ? "…" : (isLogin ? "Se connecter" : "Créer mon compte")}
         </button>
 
         <p style={{ textAlign:"center", fontSize:13, color:T.sec, fontFamily:F.body, margin:"20px 0 0" }}>
           {isLogin ? "Pas encore de compte ? " : "Déjà un compte ? "}
-          <button onClick={()=>setIsLogin(!isLogin)} style={{
+          <button onClick={()=>{ setIsLogin(!isLogin); setError(""); setInfo(""); }} style={{
             color:T.coral, fontWeight:700, background:"none", border:"none",
             cursor:"pointer", fontFamily:F.body
           }}>{isLogin ? "S'inscrire" : "Se connecter"}</button>
@@ -912,9 +954,24 @@ function AuthView({ onLogin }) {
 }
 
 // ── CREATE EVENT VIEW ──────────────────────────────────────
-function CreateEventView({ navigate }) {
-  const [form, setForm] = React.useState({title:"",desc:"",date:"",time:"",loc:"",address:"",cat:"Révisions"});
+// Props: navigate, currentUser (objet Supabase), onCreated (callback après succès)
+function CreateEventView({ navigate, currentUser, onCreated }) {
+  const [form, setForm]     = React.useState({title:"",desc:"",date:"",time:"",loc:"",address:"",cat:"Révisions"});
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError]   = React.useState("");
   const set = k => e => setForm(f=>({...f,[k]:e.target.value}));
+
+  const handlePublish = async () => {
+    if (!form.title.trim()) { setError("Le titre est requis."); return; }
+    setError(""); setLoading(true);
+    try {
+      await DB.createActivity(currentUser.id, form);
+      onCreated(); // rafraîchit la liste et navigue vers l'accueil
+    } catch(e) {
+      setError(e.message || "Erreur lors de la publication.");
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={{ paddingBottom:64 }}>
@@ -965,13 +1022,20 @@ function CreateEventView({ navigate }) {
           <Input label="Nom du lieu" placeholder="Ex : Darwin Écosystème, BU Montaigne…" value={form.loc} onChange={set("loc")} required />
           <Input label="Adresse complète" placeholder="Ex : 87 quai des Queyries, Bordeaux" value={form.address} onChange={set("address")} required />
 
+          {error && (
+            <div style={{ background:"#FDE8EC", border:`1px solid ${T.coral}`, borderRadius:10,
+              padding:"10px 14px", fontSize:13, color:T.text, fontFamily:F.body }}>
+              {error}
+            </div>
+          )}
+
           <div style={{ display:"flex", gap:12, paddingTop:8 }}>
-            <button onClick={()=>navigate("home")} className="sv-btn-primary" style={{
+            <button onClick={handlePublish} disabled={loading} className="sv-btn-primary" style={{
               flex:1, padding:"15px", background:T.coral, color:"#fff",
               border:"none", borderRadius:14, fontFamily:F.body,
-              fontWeight:700, fontSize:16, cursor:"pointer",
-              boxShadow:"0 4px 16px rgba(251,99,118,0.3)"
-            }}>✨ Publier l'événement</button>
+              fontWeight:700, fontSize:16, cursor: loading ? "not-allowed" : "pointer",
+              boxShadow:"0 4px 16px rgba(251,99,118,0.3)", opacity: loading ? 0.7 : 1
+            }}>{loading ? "Publication…" : "✨ Publier l'événement"}</button>
             <button onClick={()=>navigate(-1)} style={{
               padding:"15px 24px", background:"transparent", color:T.sec,
               border:`1.5px solid ${T.border}`, borderRadius:14,

@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Study Vibes – Bordeaux</title>
 <link href="https://fonts.googleapis.com/css2?family=Rammetto+One&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="db.js"></script>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
@@ -97,7 +100,7 @@
 <div id="root"></div>
 
 <script type="text/babel">
-const { useState } = React;
+const { useState, useEffect } = React;
 
 // ── LOGO SVG (inline, top section cropped) ─────────────────
 function Logo({ height = 40 }) {
@@ -204,41 +207,82 @@ function Navbar({ screen, navigate, unread, profile, onLogout }) {
 
 // ── APP ────────────────────────────────────────────────────
 function App() {
-  const [loggedIn, setLoggedIn] = useState(() => !!localStorage.getItem("sv_auth"));
-  const [screen, setScreen] = useState("home");
-  const [history, setHistory] = useState(["home"]);
+  const [authReady, setAuthReady]     = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [screen, setScreen]           = useState("home");
+  const [history, setHistory]         = useState(["home"]);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [events, setEvents] = useState(EVENTS_DATA);
-  const [tweaks, setTweakState] = useState(TWEAK_DEFAULTS);
-  const [convos, setConvos] = useState(() => {
-    try {
-      const saved = localStorage.getItem("sv_convos");
-      if (saved) return JSON.parse(saved);
-    } catch(e) {}
+  const [events, setEvents]           = useState([]);
+  const [tweaks, setTweakState]       = useState(TWEAK_DEFAULTS);
+  const [convos, setConvos]           = useState(() => {
+    try { const s = localStorage.getItem("sv_convos"); if (s) return JSON.parse(s); } catch(e) {}
     return CONVOS_DATA.map(c => ({...c, msgs:[...c.msgs]}));
   });
-  const [profile, setProfile] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem("sv_profile"));
-      if (saved) return saved;
-    } catch(e) {}
-    return { name:"Marie Dupont", handle:"marie.dupont", study:"Droit", city:"Bordeaux",
-      bio:"Étudiante en droit à Bordeaux · Passionnée de musique, surf et coworking au bord de la Garonne" };
+  const [profile, setProfile] = useState({
+    name:"", handle:"", study:"", city:"Bordeaux", bio:""
   });
 
-  const handleLogin = ({ name }) => {
-    if (name && name !== "Marie Dupont") {
-      const updated = { ...profile, name };
+  // ── Chargement du profil depuis Supabase
+  async function loadProfile(user) {
+    const data = await DB.getProfile(user.id);
+    if (data) {
+      const fullName = data.full_name || user.email || "";
+      const updated = {
+        name:  fullName,
+        handle: fullName.toLowerCase().replace(/\s+/g, "."),
+        study: data.school || "",
+        city:  data.city   || "Bordeaux",
+        bio:   "",
+      };
       setProfile(updated);
-      localStorage.setItem("sv_profile", JSON.stringify(updated));
     }
-    localStorage.setItem("sv_auth", "1");
-    setLoggedIn(true);
+  }
+
+  // ── Chargement des activités depuis Supabase
+  async function loadEvents(userId) {
+    try {
+      const data = await DB.getActivities(userId);
+      setEvents(data);
+      return data;
+    } catch(e) {
+      console.error("Erreur chargement activités :", e);
+      return [];
+    }
+  }
+
+  // ── Vérification de session au démarrage + écoute des changements auth
+  useEffect(() => {
+    DB.getSession().then(session => {
+      if (session) {
+        setCurrentUser(session.user);
+        loadProfile(session.user);
+        loadEvents(session.user.id);
+      }
+      setAuthReady(true);
+    });
+
+    const { data: { subscription } } = DB.onAuthChange((event, session) => {
+      if (session) {
+        setCurrentUser(session.user);
+        loadProfile(session.user);
+        loadEvents(session.user.id);
+      } else {
+        setCurrentUser(null);
+        setEvents([]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogin = (user) => {
+    setCurrentUser(user);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("sv_auth");
-    setLoggedIn(false);
+  const handleLogout = async () => {
+    await DB.signOut();
+    setCurrentUser(null);
+    setEvents([]);
     setScreen("home");
     setHistory(["home"]);
   };
@@ -258,9 +302,24 @@ function App() {
     window.scrollTo({top:0});
   };
 
-  const toggleJoin = (id) => {
-    setEvents(evs => evs.map(e => e.id===id ? {...e, joined:!e.joined} : e));
-    if (selectedEvent?.id===id) setSelectedEvent(ev => ({...ev, joined:!ev.joined}));
+  const toggleJoin = async (id) => {
+    if (!currentUser) return;
+    const ev = events.find(e => e.id === id);
+    if (!ev) return;
+    try {
+      if (ev.joined) {
+        await DB.leaveActivity(id, currentUser.id);
+      } else {
+        await DB.joinActivity(id, currentUser.id);
+      }
+      const updated = await loadEvents(currentUser.id);
+      if (selectedEvent?.id === id) {
+        const updatedEv = updated.find(e => e.id === id);
+        if (updatedEv) setSelectedEvent(updatedEv);
+      }
+    } catch(e) {
+      console.error("Erreur join/leave :", e);
+    }
   };
 
   const toggleLike = (id) => {
@@ -276,7 +335,19 @@ function App() {
 
   const unread = convos.reduce((n,c) => n + (c.unread || 0), 0);
 
-  if (!loggedIn) {
+  // Écran de chargement initial (vérification de session)
+  if (!authReady) {
+    return (
+      <div style={{ minHeight:"100vh", display:"flex", alignItems:"center",
+        justifyContent:"center", background:"#FFF9EC" }}>
+        <p style={{ fontFamily:"'Montserrat',sans-serif", color:"#9E7A8A", fontSize:15 }}>
+          Chargement…
+        </p>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
     return <AuthView onLogin={handleLogin} />;
   }
 
@@ -295,7 +366,13 @@ function App() {
         {screen==="detail"   && selectedEvent && (
           <EventDetailView ev={selectedEvent} navigate={navigate} onJoin={toggleJoin} onLike={toggleLike} />
         )}
-        {screen==="create"   && <CreateEventView navigate={navigate} />}
+        {screen==="create" && (
+          <CreateEventView
+            navigate={navigate}
+            currentUser={currentUser}
+            onCreated={() => { loadEvents(currentUser.id); navigate("home"); }}
+          />
+        )}
       </main>
 
       <TweaksPanel tweaks={tweaks} setTweak={setTweak}>
@@ -311,7 +388,7 @@ function App() {
         </TweakSection>
         <TweakSection title="Pages spéciales">
           <TweakButton label="Créer un événement" onClick={()=>setScreen("create")} />
-          <TweakButton label="Détail événement" onClick={()=>{ setSelectedEvent(events[0]); setScreen("detail"); }} />
+          <TweakButton label="Détail événement" onClick={()=>{ if(events[0]) { setSelectedEvent(events[0]); setScreen("detail"); } }} />
           <TweakButton label="Se déconnecter" onClick={handleLogout} />
         </TweakSection>
       </TweaksPanel>

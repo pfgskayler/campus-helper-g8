@@ -1,0 +1,150 @@
+// db.js — Toutes les fonctions Supabase pour Study Vibes
+// Nécessite supabase.js chargé avant (supabaseClient est global)
+
+const DB = (() => {
+  const s = supabaseClient;
+
+  // ── AUTH ────────────────────────────────────────────────────
+
+  async function signUp(email, password, fullName, school, city) {
+    const { data, error } = await s.auth.signUp({ email, password });
+    if (error) throw error;
+
+    const userId = data.user?.id;
+    if (!userId) throw new Error("Compte non créé.");
+
+    // Si email confirmé immédiatement (pas de vérification), on met à jour le profil.
+    // Sinon le trigger SQL aura déjà créé une ligne vide — l'user complétera après connexion.
+    if (data.session) {
+      await s.from("profiles").update({ full_name: fullName, school, city }).eq("id", userId);
+    }
+
+    return data; // { user, session }
+  }
+
+  async function signIn(email, password) {
+    const { data, error } = await s.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data; // { user, session }
+  }
+
+  async function signOut() {
+    await s.auth.signOut();
+  }
+
+  async function getSession() {
+    const { data } = await s.auth.getSession();
+    return data.session;
+  }
+
+  function onAuthChange(callback) {
+    return s.auth.onAuthStateChange(callback);
+  }
+
+  // ── PROFIL ──────────────────────────────────────────────────
+
+  async function getProfile(userId) {
+    const { data } = await s.from("profiles").select("*").eq("id", userId).single();
+    return data;
+  }
+
+  // ── ACTIVITÉS ───────────────────────────────────────────────
+
+  async function createActivity(userId, form) {
+    // Combine date + heure en ISO pour activity_date
+    const activityDate = (form.date && form.time)
+      ? new Date(`${form.date}T${form.time}`).toISOString()
+      : null;
+
+    const { data, error } = await s.from("activities").insert({
+      creator_id:    userId,
+      title:         form.title,
+      description:   form.desc,
+      category:      form.cat,
+      location:      form.address ? `${form.loc} — ${form.address}` : form.loc,
+      activity_date: activityDate,
+    }).select().single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async function joinActivity(activityId, userId) {
+    const { error } = await s.from("activity_registrations").upsert(
+      { activity_id: activityId, user_id: userId, status: "registered" },
+      { onConflict: "activity_id,user_id" }
+    );
+    if (error) throw error;
+  }
+
+  async function leaveActivity(activityId, userId) {
+    const { error } = await s.from("activity_registrations")
+      .delete()
+      .eq("activity_id", activityId)
+      .eq("user_id", userId);
+    if (error) throw error;
+  }
+
+  async function getActivities(currentUserId) {
+    const { data: activities, error } = await s
+      .from("activities")
+      .select("*, activity_registrations(user_id, status)")
+      .order("activity_date", { ascending: true });
+
+    if (error) throw error;
+    if (!activities || activities.length === 0) return [];
+
+    // Récupère les profils des créateurs en une seule requête
+    const creatorIds = [...new Set(activities.map(a => a.creator_id))];
+    const { data: profiles } = await s
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", creatorIds);
+
+    const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+
+    const hostColors = ["#FB6376", "#5D2A42", "#059669", "#8B5CF6", "#F59E0B", "#EC4899"];
+    const now = new Date();
+
+    return activities.map((a, i) => {
+      const creator = profileMap[a.creator_id] || {};
+      const registrations = a.activity_registrations || [];
+      const actDate = a.activity_date ? new Date(a.activity_date) : null;
+
+      const fullName = creator.full_name || "";
+      const hostInit = fullName
+        ? fullName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()
+        : "?";
+
+      return {
+        id:           a.id,
+        title:        a.title || "",
+        desc:         a.description || "",
+        cat:          a.category || "Autre",
+        loc:          a.location || "",
+        address:      "",
+        date:         actDate
+          ? actDate.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })
+          : "",
+        time:         actDate
+          ? actDate.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+          : "",
+        img:          `https://picsum.photos/seed/sv${a.id}/800/420`,
+        host:         fullName || "Inconnu",
+        hostInit,
+        hostColor:    hostColors[i % hostColors.length],
+        joined:       registrations.some(r => r.user_id === currentUserId),
+        participants: registrations.length,
+        past:         actDate ? actDate < now : false,
+      };
+    });
+  }
+
+  return {
+    signUp, signIn, signOut, getSession, onAuthChange,
+    getProfile,
+    createActivity, joinActivity, leaveActivity, getActivities,
+  };
+})();
+
+window.DB = DB;
