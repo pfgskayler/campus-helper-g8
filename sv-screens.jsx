@@ -522,41 +522,52 @@ function MessagesView({ convos, setConvos }) {
     }}>
       {/* Sidebar */}
       <div style={{ borderRight:`1px solid ${T.border}`, display:"flex", flexDirection:"column" }}>
-        <div style={{ padding:"20px 16px", borderBottom:`1px solid ${T.border}` }}>
-          <h2 style={{ fontSize:18, fontFamily:F.title, fontWeight:400, color:T.text, margin:0 }}>Messages</h2>
+        <div style={{ padding:"16px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <h2 style={{ fontSize:17, fontFamily:F.title, fontWeight:400, color:T.text, margin:0 }}>Messages</h2>
+          <span style={{ fontSize:11, color:T.sec, fontFamily:F.body, fontWeight:600 }}>
+            {convos.reduce((n,c) => n + (c.unread||0), 0) > 0
+              ? `${convos.reduce((n,c) => n + (c.unread||0), 0)} non lu${convos.reduce((n,c) => n + (c.unread||0), 0) > 1 ? "s" : ""}`
+              : "Tout lu"}
+          </span>
         </div>
         <div style={{ overflowY:"auto", flex:1 }}>
-          {convos.map((c,i) => (
-            <button key={c.id} onClick={()=>openConvo(i)} className="sv-convo-row" style={{
-              width:"100%", padding:"14px 16px",
-              display:"flex", gap:12, alignItems:"center", textAlign:"left",
-              background: active===i ? T.muted : "none",
-              border:"none", borderBottom:`1px solid ${T.border}`,
-              cursor:"pointer", fontFamily:F.body
-            }}>
-              <div style={{ position:"relative", flexShrink:0 }}>
-                <Avatar init={c.init} color={c.color} size={44} />
-                {c.unread>0 && (
-                  <div style={{
-                    position:"absolute", top:-2, right:-2,
-                    background:T.coral, borderRadius:50, width:18, height:18,
-                    display:"flex", alignItems:"center", justifyContent:"center",
-                    fontSize:10, color:"#fff", fontWeight:700
-                  }}>{c.unread}</div>
-                )}
-              </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
-                  <span style={{ fontWeight:700, fontSize:14, color:T.text }}>{c.name}</span>
-                  <span style={{ fontSize:11, color:T.sec, fontWeight:500 }}>{c.time}</span>
+          {convos.map((c,i) => {
+            const isActive = active === i;
+            return (
+              <button key={c.id} onClick={()=>openConvo(i)} className="sv-convo-row" style={{
+                width:"100%", padding:"13px 16px 13px 13px",
+                display:"flex", gap:12, alignItems:"center", textAlign:"left",
+                background: isActive ? T.lilac : "transparent",
+                border:"none", borderBottom:`1px solid ${T.border}`,
+                borderLeft: isActive ? `3px solid ${T.coral}` : "3px solid transparent",
+                cursor:"pointer", fontFamily:F.body,
+                transition:"background 0.12s, border-color 0.12s"
+              }}>
+                <div style={{ position:"relative", flexShrink:0 }}>
+                  <Avatar init={c.init} color={c.color} size={42} />
+                  {c.unread>0 && (
+                    <div style={{
+                      position:"absolute", top:-2, right:-2,
+                      background:T.coral, borderRadius:50, width:18, height:18,
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      fontSize:10, color:"#fff", fontWeight:700
+                    }}>{c.unread}</div>
+                  )}
                 </div>
-                <div style={{
-                  fontSize:13, color:T.sec, fontWeight:c.unread>0?600:400,
-                  whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"
-                }}>{c.preview}</div>
-              </div>
-            </button>
-          ))}
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:3 }}>
+                    <span style={{ fontWeight:700, fontSize:14, color: isActive ? T.coral : T.text }}>{c.name}</span>
+                    <span style={{ fontSize:11, color:T.sec, fontWeight:500, flexShrink:0, marginLeft:6 }}>{c.time}</span>
+                  </div>
+                  <div style={{
+                    fontSize:13, color: isActive ? T.purple : T.sec,
+                    fontWeight: c.unread>0 ? 600 : 400,
+                    whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"
+                  }}>{c.preview}</div>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -626,10 +637,19 @@ function MessagesView({ convos, setConvos }) {
 }
 
 // ── PROFILE VIEW ───────────────────────────────────────────
-function ProfileView({ events, navigate, onLike, profile, setProfile }) {
+function ProfileView({ events, navigate, onLike, profile, setProfile, onAvatarUpload }) {
   const [showAllUpcoming, setShowAllUpcoming] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
   const [draft, setDraft] = React.useState(profile);
+  const [uploadingAvatar, setUploadingAvatar] = React.useState(false);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !onAvatarUpload) return;
+    setUploadingAvatar(true);
+    try { await onAvatarUpload(file); } catch(err) { console.error("Avatar upload error:", err); }
+    setUploadingAvatar(false);
+  };
 
   const saveProfile = () => {
     localStorage.setItem("sv_profile", JSON.stringify(draft));
@@ -714,42 +734,56 @@ function ProfileView({ events, navigate, onLike, profile, setProfile }) {
       {/* Header banner */}
       <div style={{
         background:`linear-gradient(135deg, ${T.purple} 0%, #8B3A5C 100%)`,
-        borderRadius:24, padding:"40px 40px", marginBottom:32,
-        display:"flex", alignItems:"center", gap:32
+        borderRadius:24, padding:"24px 28px", marginBottom:32,
+        display:"flex", alignItems:"center", gap:20, flexWrap:"wrap"
       }}>
-        <div style={{
-          width:96, height:96, borderRadius:96, background:T.coral,
-          border:"4px solid rgba(255,255,255,0.25)",
-          display:"flex", alignItems:"center", justifyContent:"center",
-          fontSize:38, fontWeight:700, color:"#fff", flexShrink:0, fontFamily:F.body
-        }}>{initials}</div>
-        <div style={{ flex:1 }}>
-          <h1 style={{ fontSize:24, fontFamily:F.title, fontWeight:400, color:"#fff", marginBottom:4 }}>{profile.name}</h1>
-          <p style={{ fontSize:14, color:"rgba(255,255,255,0.6)", fontFamily:F.body, fontWeight:500, marginBottom:20 }}>
-            @{profile.handle} · {profile.study}, {profile.city}
+        {/* Avatar + upload */}
+        <div style={{ position:"relative", flexShrink:0 }}>
+          <Avatar init={initials} color={T.coral} size={80} src={profile.avatarUrl} />
+          <label htmlFor="sv-avatar-upload" style={{
+            position:"absolute", bottom:-2, right:-2,
+            width:26, height:26, borderRadius:26,
+            background:"#fff", border:`2px solid ${T.coral}`,
+            display:"flex", alignItems:"center", justifyContent:"center",
+            cursor: uploadingAvatar ? "wait" : "pointer", fontSize:11
+          }} title="Changer la photo">
+            {uploadingAvatar ? "…" : "📷"}
+            <input id="sv-avatar-upload" type="file" accept="image/*"
+              style={{ display:"none" }} onChange={handleAvatarUpload}
+              disabled={uploadingAvatar} />
+          </label>
+        </div>
+
+        {/* Info */}
+        <div style={{ flex:1, minWidth:160 }}>
+          <h1 style={{ fontSize:20, fontFamily:F.title, fontWeight:400, color:"#fff", marginBottom:3, lineHeight:1.2 }}>{profile.name}</h1>
+          <p style={{ fontSize:12, color:"rgba(255,255,255,0.6)", fontFamily:F.body, fontWeight:500, marginBottom:14 }}>
+            @{profile.handle}{profile.study ? ` · ${profile.study}` : ""}{profile.city ? `, ${profile.city}` : ""}
           </p>
-          <div style={{ display:"flex", gap:32 }}>
+          <div style={{ display:"flex", gap:20, flexWrap:"wrap" }}>
             {[[String(joinedAll.length),"Événements"],["12","Amis"],["3","Créés"],[String(liked.length),"Favoris"]].map(([n,l])=>(
               <div key={l}>
-                <p style={{ fontSize:22, fontFamily:F.title, fontWeight:400, color:"#fff", margin:0 }}>{n}</p>
-                <p style={{ fontSize:12, color:"rgba(255,255,255,0.55)", fontFamily:F.body, margin:0 }}>{l}</p>
+                <p style={{ fontSize:18, fontFamily:F.title, fontWeight:400, color:"#fff", margin:0 }}>{n}</p>
+                <p style={{ fontSize:11, color:"rgba(255,255,255,0.55)", fontFamily:F.body, margin:0 }}>{l}</p>
               </div>
             ))}
           </div>
         </div>
-        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+
+        {/* Actions */}
+        <div style={{ display:"flex", gap:8, flexShrink:0 }}>
           <button onClick={() => { setDraft(profile); setEditing(true); }} style={{
             background:"rgba(255,255,255,0.15)", color:"#fff",
-            border:"1.5px solid rgba(255,255,255,0.25)", borderRadius:12,
-            padding:"11px 24px", fontWeight:700, fontSize:14,
-            cursor:"pointer", fontFamily:F.body
-          }}>✏️ Modifier le profil</button>
+            border:"1.5px solid rgba(255,255,255,0.25)", borderRadius:10,
+            padding:"9px 16px", fontWeight:700, fontSize:13,
+            cursor:"pointer", fontFamily:F.body, whiteSpace:"nowrap"
+          }}>✏️ Modifier</button>
           <button style={{
             background:"rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.65)",
-            border:"1.5px solid rgba(255,255,255,0.15)", borderRadius:12,
-            padding:"11px 24px", fontWeight:600, fontSize:14,
+            border:"1.5px solid rgba(255,255,255,0.15)", borderRadius:10,
+            padding:"9px 12px", fontWeight:600, fontSize:13,
             cursor:"pointer", fontFamily:F.body
-          }}>📤 Partager</button>
+          }}>📤</button>
         </div>
       </div>
 
@@ -956,17 +990,31 @@ function AuthView({ onLogin }) {
 // ── CREATE EVENT VIEW ──────────────────────────────────────
 // Props: navigate, currentUser (objet Supabase), onCreated (callback après succès)
 function CreateEventView({ navigate, currentUser, onCreated }) {
-  const [form, setForm]     = React.useState({title:"",desc:"",date:"",time:"",loc:"",address:"",cat:"Révisions"});
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError]   = React.useState("");
+  const [form, setForm]       = React.useState({title:"",desc:"",date:"",time:"",loc:"",address:"",cat:"Révisions"});
+  const [loading, setLoading]   = React.useState(false);
+  const [error, setError]     = React.useState("");
+  const [imageFile, setImageFile] = React.useState(null);
+  const [imagePreview, setImagePreview] = React.useState(null);
   const set = k => e => setForm(f=>({...f,[k]:e.target.value}));
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = ev => setImagePreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
 
   const handlePublish = async () => {
     if (!form.title.trim()) { setError("Le titre est requis."); return; }
     setError(""); setLoading(true);
     try {
-      await DB.createActivity(currentUser.id, form);
-      onCreated(); // rafraîchit la liste et navigue vers l'accueil
+      const activity = await DB.createActivity(currentUser.id, form);
+      if (imageFile && activity?.id) {
+        try { await DB.uploadEventImage(imageFile, activity.id); } catch(imgErr) { console.warn("Image upload failed:", imgErr); }
+      }
+      onCreated();
     } catch(e) {
       setError(e.message || "Erreur lors de la publication.");
       setLoading(false);
@@ -991,6 +1039,36 @@ function CreateEventView({ navigate, currentUser, onCreated }) {
 
         <div style={{ background:T.card, borderRadius:20, padding:"36px",
           border:`1px solid ${T.border}`, display:"flex", flexDirection:"column", gap:24 }}>
+
+          {/* Image upload */}
+          <div>
+            <label style={{ fontSize:13, fontWeight:600, color:T.text, fontFamily:F.body, display:"block", marginBottom:8 }}>
+              Image de l'événement
+            </label>
+            {imagePreview ? (
+              <div style={{ position:"relative", borderRadius:16, overflow:"hidden", height:180, marginBottom:0 }}>
+                <img src={imagePreview} alt="preview" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                <button onClick={() => { setImageFile(null); setImagePreview(null); }} style={{
+                  position:"absolute", top:10, right:10, background:"rgba(0,0,0,0.55)",
+                  border:"none", borderRadius:50, width:30, height:30, cursor:"pointer",
+                  color:"#fff", fontSize:15, display:"flex", alignItems:"center", justifyContent:"center"
+                }}>✕</button>
+              </div>
+            ) : (
+              <label style={{
+                display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+                border:`2px dashed ${T.border}`, borderRadius:16, padding:"32px 20px",
+                cursor:"pointer", background:T.muted, transition:"border-color 0.2s"
+              }}
+                onMouseEnter={e=>e.currentTarget.style.borderColor=T.coral}
+                onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>
+                <span style={{ fontSize:28, marginBottom:8 }}>📷</span>
+                <span style={{ fontSize:14, fontWeight:600, color:T.sec, fontFamily:F.body }}>Ajouter une photo</span>
+                <span style={{ fontSize:12, color:T.sec, fontFamily:F.body, marginTop:4 }}>JPG, PNG — max 5 Mo</span>
+                <input type="file" accept="image/*" style={{ display:"none" }} onChange={handleImageChange} />
+              </label>
+            )}
+          </div>
 
           <Input label="Titre de l'événement" placeholder="Ex : Session révisions droit constitutionnel" value={form.title} onChange={set("title")} required />
 

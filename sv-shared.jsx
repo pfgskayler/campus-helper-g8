@@ -96,7 +96,18 @@ const CATS = ["Tous","Révisions","Coworking","Sport","Musique","Sortie","Art","
 
 // ── SHARED COMPONENTS ──────────────────────────────────────
 
-function Avatar({ init, color, size = 40 }) {
+function Avatar({ init, color, size = 40, src }) {
+  if (src) {
+    return (
+      <div style={{
+        width:size, height:size, borderRadius:"50%",
+        overflow:"hidden", flexShrink:0,
+        border:"2px solid rgba(255,255,255,0.2)"
+      }}>
+        <img src={src} alt={init || ""} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
+      </div>
+    );
+  }
   return (
     <div style={{
       width:size, height:size, borderRadius:size,

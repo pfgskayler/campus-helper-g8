@@ -48,6 +48,31 @@ const DB = (() => {
     return data;
   }
 
+  async function updateProfile(userId, updates) {
+    const { error } = await s.from("profiles").update(updates).eq("id", userId);
+    if (error) throw error;
+  }
+
+  async function uploadAvatar(file, userId) {
+    const ext = file.name.split(".").pop().toLowerCase();
+    const path = `${userId}/avatar.${ext}`;
+    const { error: upErr } = await s.storage.from("avatars").upload(path, file, { upsert: true });
+    if (upErr) throw upErr;
+    const { data } = s.storage.from("avatars").getPublicUrl(path);
+    await s.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", userId);
+    return data.publicUrl;
+  }
+
+  async function uploadEventImage(file, activityId) {
+    const ext = file.name.split(".").pop().toLowerCase();
+    const path = `${activityId}/cover.${ext}`;
+    const { error: upErr } = await s.storage.from("activity-images").upload(path, file, { upsert: true });
+    if (upErr) throw upErr;
+    const { data } = s.storage.from("activity-images").getPublicUrl(path);
+    await s.from("activities").update({ image_url: data.publicUrl }).eq("id", activityId);
+    return data.publicUrl;
+  }
+
   // ── ACTIVITÉS ───────────────────────────────────────────────
 
   async function createActivity(userId, form) {
@@ -129,7 +154,7 @@ const DB = (() => {
         time:         actDate
           ? actDate.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
           : "",
-        img:          `https://picsum.photos/seed/sv${a.id}/800/420`,
+        img:          a.image_url || `https://picsum.photos/seed/sv${a.id}/800/420`,
         host:         fullName || "Inconnu",
         hostInit,
         hostColor:    hostColors[i % hostColors.length],
@@ -142,7 +167,7 @@ const DB = (() => {
 
   return {
     signUp, signIn, signOut, getSession, onAuthChange,
-    getProfile,
+    getProfile, updateProfile, uploadAvatar, uploadEventImage,
     createActivity, joinActivity, leaveActivity, getActivities,
   };
 })();
